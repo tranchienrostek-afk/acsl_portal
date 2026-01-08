@@ -1,0 +1,476 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>AlgoTrace Ultra - Logic X-Ray</title>
+    <link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;700&display=swap" rel="stylesheet">
+    <style>
+        :root {
+            --bg: #09090b;
+            --glass: rgba(255, 255, 255, 0.05);
+            --border: rgba(255, 255, 255, 0.1);
+            --accent: #00f2ff;
+            --accent-glow: rgba(0, 242, 255, 0.3);
+            --success: #00ff9d;
+            --fail: #ff0055;
+            --text: #e4e4e7;
+            --muted: #71717a;
+            --header-font: 'JetBrains Mono', monospace;
+        }
+
+        * { box-sizing: border-box; }
+
+        body {
+            margin: 0;
+            background-color: var(--bg);
+            color: var(--text);
+            font-family: var(--header-font);
+            height: 100vh;
+            display: flex;
+            flex-direction: column;
+            overflow: hidden;
+            background-image: radial-gradient(circle at 50% 50%, #111 0%, #000 100%);
+        }
+
+        /* HEADER */
+        header {
+            padding: 15px 25px;
+            border-bottom: 1px solid var(--border);
+            background: rgba(0,0,0,0.5);
+            backdrop-filter: blur(10px);
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            z-index: 100;
+        }
+
+        h1 { margin: 0; font-size: 1.5rem; text-transform: uppercase; letter-spacing: 2px; text-shadow: 0 0 10px var(--accent-glow); }
+        h1 span { color: var(--accent); }
+
+        .btn-group { display: flex; gap: 10px; }
+        
+        button {
+            background: rgba(0, 242, 255, 0.1);
+            border: 1px solid var(--accent);
+            color: var(--accent);
+            padding: 8px 20px;
+            font-family: inherit;
+            font-weight: bold;
+            cursor: pointer;
+            transition: 0.3s;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+            border-radius: 4px;
+        }
+        
+        button:hover {
+            background: var(--accent);
+            color: #000;
+            box-shadow: 0 0 20px var(--accent-glow);
+        }
+
+        /* MAIN LAYOUT */
+        .container {
+            display: flex;
+            flex: 1;
+            height: calc(100vh - 70px);
+        }
+
+        /* EDITOR PANE */
+        .editor-pane {
+            width: 35%;
+            border-right: 1px solid var(--border);
+            display: flex;
+            flex-direction: column;
+            background: var(--glass);
+        }
+
+        .pane-title {
+            padding: 10px 15px;
+            font-size: 0.8rem;
+            color: var(--muted);
+            text-transform: uppercase;
+            border-bottom: 1px solid var(--border);
+            background: rgba(0,0,0,0.2);
+        }
+
+        textarea {
+            flex: 1;
+            background: transparent;
+            border: none;
+            color: var(--text);
+            padding: 20px;
+            font-family: 'JetBrains Mono', monospace;
+            font-size: 0.9rem;
+            line-height: 1.6;
+            resize: none;
+            outline: none;
+        }
+
+        /* VISUALIZER PANE */
+        .viz-pane {
+            flex: 1;
+            display: flex;
+            flex-direction: column;
+            overflow: hidden;
+            position: relative;
+        }
+
+        /* TABLE STYLES */
+        .table-wrapper {
+            flex: 1;
+            overflow: auto;
+            padding: 20px;
+        }
+
+        table {
+            width: 100%;
+            border-collapse: separate;
+            border-spacing: 0 5px; /* Spacing for floating rows */
+            font-size: 0.85rem;
+        }
+
+        th {
+            text-align: left;
+            padding: 10px;
+            color: var(--muted);
+            font-weight: normal;
+            position: sticky;
+            top: 0;
+            background: var(--bg);
+            z-index: 10;
+            border-bottom: 2px solid var(--border);
+        }
+
+        tr.data-row {
+            background: var(--glass);
+            transition: 0.2s;
+            animation: slideIn 0.4s ease forwards;
+            opacity: 0;
+            transform: translateX(-20px);
+        }
+
+        tr.data-row:hover { background: rgba(255,255,255,0.1); }
+
+        td {
+            padding: 12px 10px;
+            border: none;
+            border-top: 1px solid transparent;
+            border-bottom: 1px solid transparent;
+        }
+
+        td:first-child { border-top-left-radius: 6px; border-bottom-left-radius: 6px; border-left: 2px solid transparent; }
+        td:last-child { border-top-right-radius: 6px; border-bottom-right-radius: 6px; }
+
+        /* SPECIAL CELLS */
+        .step-num { color: var(--muted); width: 50px; }
+        
+        .code-cell { 
+            color: #fff; width: 300px; 
+            font-weight: bold;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+
+        .badge {
+            padding: 2px 6px;
+            border-radius: 3px;
+            font-size: 0.7rem;
+            font-weight: bold;
+            text-transform: uppercase;
+        }
+        .badge-true { background: rgba(0, 255, 157, 0.1); color: var(--success); border: 1px solid var(--success); box-shadow: 0 0 10px rgba(0, 255, 157, 0.2); }
+        .badge-false { background: rgba(255, 0, 85, 0.1); color: var(--fail); border: 1px solid var(--fail); box-shadow: 0 0 10px rgba(255, 0, 85, 0.2); }
+        .badge-assign { background: rgba(0, 242, 255, 0.1); color: var(--accent); border: 1px solid var(--accent); }
+
+        .var-cell { color: var(--muted); text-align: center; }
+        .var-cell.active { 
+            color: var(--accent); 
+            background: rgba(0, 242, 255, 0.05); 
+            border: 1px solid rgba(0, 242, 255, 0.2);
+            text-shadow: 0 0 5px var(--accent);
+            font-weight: bold;
+        }
+
+        /* CONSOLE */
+        .console {
+            height: 150px;
+            background: #000;
+            border-top: 1px solid var(--border);
+            padding: 15px;
+            overflow-y: auto;
+            font-size: 0.85rem;
+        }
+        .log-line { margin-bottom: 5px; color: var(--success); }
+        .log-line::before { content: '➜ '; color: var(--muted); }
+
+        @keyframes slideIn { to { opacity: 1; transform: translateX(0); } }
+
+    </style>
+</head>
+<body>
+
+    <header>
+        <h1>AlgoTrace <span>Ultra</span></h1>
+        <div class="btn-group">
+            <button onclick="loadSample()">Nạp Bài Mẫu</button>
+            <button onclick="run()">CHẠY (RUN)</button>
+        </div>
+    </header>
+
+    <div class="container">
+        <div class="editor-pane">
+            <div class="pane-title">CODE EDITOR (PSEUDO-CODE)</div>
+            <textarea id="codeArea" spellcheck="false"></textarea>
+        </div>
+
+        <div class="viz-pane">
+            <div class="table-wrapper">
+                <table id="traceTable">
+                    <thead>
+                        <tr id="tableHead">
+                            <th>#</th>
+                            <th>LỆNH & LOGIC</th>
+                            <th>ĐIỀU KIỆN / GHI CHÚ</th>
+                            </tr>
+                    </thead>
+                    <tbody id="tableBody"></tbody>
+                </table>
+            </div>
+            <div class="console">
+                <div class="pane-title" style="background:none; padding-left:0; color:var(--accent)">SYSTEM OUTPUT</div>
+                <div id="consoleOutput"></div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // --- 1. CORE VARIABLES ---
+        let memory = {};
+        let stepCount = 0;
+        let logs = [];
+
+        // --- 2. SAMPLE DATA (USER'S REQUEST) ---
+        const sampleCode = `// Khởi tạo các biến
+a = 1 : b = 2 : c = 3 : d = 4 : e = 4 : f = 6
+
+// CASE 1: Điều kiện đơn giản
+if (d / b) < (f / a) then d = d / b
+
+// CASE 2: Tính toán phức tạp
+a = f ^ b / c ^ (d / b)
+
+// CASE 3: Điều kiện phức hợp (AND)
+// Kiểm tra: a <= f VÀ b > e
+if (a <= f) && (b > e) then a = f else b = e
+
+// CASE 4: Hàm toán học (ABS, INT)
+if abs(c - f) != int(f / c) then c = f / c else f = f / c
+
+// CASE 5: Điều kiện OR
+if (a == b) || (c == d) then a = a + b
+
+// CASE 6: Tính toán cuối
+c = c + d
+
+// CASE 7: Output siêu phức tạp
+output (b * c) * (f + d) / a / 2 * d - c + e ^ (b - 2 * d)`;
+
+        function loadSample() {
+            document.getElementById('codeArea').value = sampleCode;
+            run();
+        }
+
+        // --- 3. PARSER ENGINE ---
+
+        // Hàm thay thế cú pháp người dùng sang JS
+        function safeEval(expr) {
+            let jsExpr = expr
+                .replace(/\^/g, '**') // Lũy thừa
+                .replace(/\bint\(/g, 'Math.floor(')
+                .replace(/\babs\(/g, 'Math.abs(')
+                .replace(/==/g, '===') // Strict equality
+                .replace(/!=/g, '!==');
+
+            // Thay thế tên biến bằng memory['var']
+            // Sort keys by length desc to avoid replacing 'ab' as 'a'b
+            const vars = Object.keys(memory).sort((a,b) => b.length - a.length);
+            for(let v of vars) {
+                // Regex: Word boundary
+                const regex = new RegExp(`\\b${v}\\b`, 'g');
+                jsExpr = jsExpr.replace(regex, `memory['${v}']`);
+            }
+
+            try {
+                return new Function('memory', `return ${jsExpr}`)(memory);
+            } catch(e) {
+                return "ERR";
+            }
+        }
+
+        // --- 4. EXECUTION ENGINE ---
+
+        function run() {
+            // Reset UI
+            memory = {};
+            stepCount = 0;
+            document.getElementById('tableBody').innerHTML = '';
+            document.getElementById('consoleOutput').innerHTML = '';
+            
+            // 1. Pre-scan variables to build table headers
+            const rawCode = document.getElementById('codeArea').value;
+            // Clean code: remove comments, split by newline and colon
+            let lines = [];
+            rawCode.split('\n').forEach(line => {
+                const clean = line.split('//')[0].trim();
+                if(clean) clean.split(':').forEach(cmd => lines.push(cmd.trim()));
+            });
+
+            // Find all vars
+            lines.forEach(l => {
+                const match = l.match(/^([a-zA-Z_]\w*)\s*=/);
+                if(match && !l.toLowerCase().startsWith('if')) memory[match[1]] = 0;
+            });
+            const varNames = Object.keys(memory).sort();
+
+            // Build Header
+            const thead = document.getElementById('tableHead');
+            thead.innerHTML = `<th>#</th><th style="width:300px">LỆNH & LOGIC</th><th>CHI TIẾT LOGIC</th>`;
+            varNames.forEach(v => {
+                thead.innerHTML += `<th class="var-cell">${v}</th>`;
+            });
+
+            // Clear memory values to undefined for visual clarity
+            varNames.forEach(v => memory[v] = undefined);
+
+            // 2. RUN LINE BY LINE
+            lines.forEach(cmd => {
+                if(!cmd) return;
+                stepCount++;
+                let changedVar = null;
+                let logicNote = "";
+                let statusBadge = "";
+
+                // --- PARSE COMMAND TYPE ---
+
+                // TYPE: IF STATEMENT
+                if(cmd.toLowerCase().startsWith('if ')) {
+                    // Pattern: if (cond) then (act1) else (act2)
+                    // Simplified regex for user's format
+                    const match = cmd.match(/if\s+(.+)\s+then\s+(.+?)(\s+else\s+(.+))?$/i);
+                    if(match) {
+                        const conditionStr = match[1];
+                        const thenAct = match[2];
+                        const elseAct = match[4];
+
+                        // EVALUATE CONDITION EXPLICITLY
+                        const condResult = safeEval(conditionStr);
+                        
+                        // Prepare Visuals
+                        statusBadge = condResult 
+                            ? `<span class="badge badge-true">TRUE</span>` 
+                            : `<span class="badge badge-false">FALSE</span>`;
+                        
+                        // Thay thế giá trị vào chuỗi điều kiện để hiển thị cho đẹp
+                        // VD: (4 < 6) thay vì (d/b < f/a)
+                        let niceCond = conditionStr;
+                        varNames.forEach(v => {
+                             if(memory[v] !== undefined) {
+                                 const regex = new RegExp(`\\b${v}\\b`, 'g');
+                                 niceCond = niceCond.replace(regex, memory[v]);
+                             }
+                        });
+                        logicNote = `${niceCond} ➜ <b>${condResult}</b>`;
+
+                        // Execute Branch
+                        const actionToRun = condResult ? thenAct : elseAct;
+                        
+                        if(actionToRun) {
+                            if(actionToRun.includes('=')) {
+                                const parts = actionToRun.split('=');
+                                const target = parts[0].trim();
+                                const expr = parts.slice(1).join('=');
+                                const val = safeEval(expr);
+                                memory[target] = val;
+                                changedVar = target;
+                                logicNote += `<br>➜ Chạy: ${actionToRun}`;
+                            } 
+                            // Handle logic assignment in if (simplified)
+                        }
+                    }
+                }
+                // TYPE: ASSIGNMENT
+                else if (cmd.includes('=') && !cmd.toLowerCase().startsWith('output')) {
+                    const parts = cmd.split('=');
+                    const target = parts[0].trim();
+                    const expr = parts.slice(1).join('=');
+                    const val = safeEval(expr);
+                    memory[target] = val;
+                    changedVar = target;
+                    statusBadge = `<span class="badge badge-assign">SET</span>`;
+                    logicNote = `${expr} = ${val}`;
+                }
+                // TYPE: OUTPUT
+                else if (cmd.toLowerCase().startsWith('output ')) {
+                    const expr = cmd.substring(7);
+                    const val = safeEval(expr);
+                    statusBadge = `<span class="badge badge-assign">PRINT</span>`;
+                    logicNote = `Console: ${val}`;
+                    document.getElementById('consoleOutput').innerHTML += `<div class="log-line">${val}</div>`;
+                }
+
+                // ADD ROW TO TABLE
+                addRow(stepCount, cmd, statusBadge, logicNote, changedVar, varNames);
+            });
+        }
+
+        function addRow(step, cmd, badge, note, changed, vars) {
+            const tbody = document.getElementById('tableBody');
+            const tr = document.createElement('tr');
+            tr.className = 'data-row';
+            
+            // Build Row HTML
+            let html = `
+                <td class="step-num">${step}</td>
+                <td>
+                    <div class="code-cell">
+                        ${badge}
+                        <span>${cmd}</span>
+                    </div>
+                </td>
+                <td style="color:#aaa; font-family:'Segoe UI'">${note}</td>
+            `;
+
+            // Var Columns
+            vars.forEach(v => {
+                const val = memory[v];
+                // Format numbers (integers vs floats)
+                let display = '-';
+                if(val !== undefined) {
+                    display = Number.isInteger(val) ? val : parseFloat(val.toFixed(4));
+                }
+                
+                const activeClass = (v === changed) ? 'active' : '';
+                
+                // Hiệu ứng border trái cho ô thay đổi
+                const style = (v === changed) ? 'border-left: 3px solid var(--accent)' : '';
+
+                html += `<td class="var-cell ${activeClass}" style="${style}">${display}</td>`;
+            });
+
+            tr.innerHTML = html;
+            tbody.appendChild(tr);
+            
+            // Auto scroll
+            const wrapper = document.querySelector('.table-wrapper');
+            wrapper.scrollTop = wrapper.scrollHeight;
+        }
+
+        // Init
+        window.onload = loadSample;
+
+    </script>
+</body>
+</html>

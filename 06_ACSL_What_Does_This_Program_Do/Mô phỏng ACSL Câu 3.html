@@ -1,0 +1,363 @@
+<!DOCTYPE html>
+<html lang="vi">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Mô phỏng ACSL - Câu 3: Gộp Danh Sách</title>
+    <link
+        href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;800&family=JetBrains+Mono:wght@400;700&display=swap"
+        rel="stylesheet">
+    <style>
+        :root {
+            --bg: #030712;
+            --card-bg: rgba(17, 24, 39, 0.8);
+            --accent: #f59e0b;
+            --accent-glow: rgba(245, 158, 11, 0.4);
+            --text: #f9fafb;
+            --text-dim: #9ca3af;
+            --a-color: #3b82f6;
+            --b-color: #10b981;
+            --c-color: #8b5cf6;
+        }
+
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Inter', sans-serif;
+            background: var(--bg);
+            color: var(--text);
+            padding: 40px 20px;
+        }
+
+        .container {
+            max-width: 1000px;
+            margin: 0 auto;
+        }
+
+        header {
+            text-align: center;
+            margin-bottom: 40px;
+        }
+
+        h1 {
+            font-size: 2.2rem;
+            font-weight: 800;
+            background: linear-gradient(to right, #f59e0b, #ef4444);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+        }
+
+        .card {
+            background: var(--card-bg);
+            backdrop-filter: blur(12px);
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            border-radius: 24px;
+            padding: 30px;
+            margin-bottom: 30px;
+        }
+
+        .code-block {
+            font-family: 'JetBrains Mono', monospace;
+            background: #000;
+            padding: 15px;
+            border-radius: 12px;
+            border-left: 4px solid var(--accent);
+            margin-bottom: 20px;
+            font-size: 0.85rem;
+            overflow-x: auto;
+        }
+
+        .array-section {
+            margin-bottom: 25px;
+        }
+
+        .array-label {
+            font-weight: 600;
+            margin-bottom: 10px;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+
+        .array-label .dot {
+            width: 12px;
+            height: 12px;
+            border-radius: 50%;
+        }
+
+        .array-display {
+            display: flex;
+            gap: 8px;
+            flex-wrap: wrap;
+        }
+
+        .array-item {
+            width: 50px;
+            height: 50px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            border-radius: 10px;
+            font-weight: 700;
+            font-size: 1.1rem;
+            transition: 0.3s;
+            position: relative;
+        }
+
+        .array-item .idx {
+            position: absolute;
+            top: -18px;
+            font-size: 0.65rem;
+            color: var(--text-dim);
+        }
+
+        .array-item.a {
+            background: rgba(59, 130, 246, 0.2);
+            border: 2px solid var(--a-color);
+        }
+
+        .array-item.b {
+            background: rgba(16, 185, 129, 0.2);
+            border: 2px solid var(--b-color);
+        }
+
+        .array-item.c {
+            background: rgba(139, 92, 246, 0.2);
+            border: 2px solid var(--c-color);
+        }
+
+        .array-item.active {
+            transform: scale(1.15);
+            box-shadow: 0 0 15px currentColor;
+        }
+
+        .array-item.used {
+            opacity: 0.4;
+        }
+
+        .vars {
+            display: flex;
+            gap: 20px;
+            flex-wrap: wrap;
+            margin: 20px 0;
+        }
+
+        .var-box {
+            background: rgba(255, 255, 255, 0.05);
+            padding: 15px 25px;
+            border-radius: 12px;
+            text-align: center;
+        }
+
+        .var-box .name {
+            font-size: 0.8rem;
+            color: var(--text-dim);
+        }
+
+        .var-box .val {
+            font-size: 1.5rem;
+            font-weight: 800;
+            color: var(--accent);
+        }
+
+        .step-info {
+            background: rgba(245, 158, 11, 0.1);
+            padding: 15px;
+            border-radius: 12px;
+            border: 1px dashed var(--accent);
+            margin-bottom: 20px;
+        }
+
+        .controls {
+            display: flex;
+            gap: 15px;
+            justify-content: center;
+            margin-top: 20px;
+        }
+
+        button {
+            padding: 12px 24px;
+            border-radius: 12px;
+            border: none;
+            background: var(--accent);
+            color: #000;
+            font-weight: 600;
+            cursor: pointer;
+            transition: 0.2s;
+        }
+
+        button:hover {
+            transform: translateY(-2px);
+        }
+
+        button:disabled {
+            opacity: 0.5;
+            cursor: not-allowed;
+        }
+
+        .result-box {
+            text-align: center;
+            padding: 25px;
+            background: linear-gradient(135deg, rgba(139, 92, 246, 0.1), rgba(245, 158, 11, 0.1));
+            border-radius: 16px;
+            margin-top: 20px;
+        }
+
+        .result-val {
+            font-size: 2.5rem;
+            font-weight: 800;
+            color: var(--c-color);
+        }
+    </style>
+</head>
+
+<body>
+    <div class="container">
+        <header>
+            <h1>Mô phỏng ACSL: Câu 3</h1>
+            <p>Thuật toán gộp hai danh sách đã sắp xếp</p>
+        </header>
+
+        <div class="card">
+            <div class="code-block">
+                A = [12, 41, 52, 57, 77, -100]<br>
+                B = [17, 34, 81]<br>
+                j = 0; k = 0; n = 0<br>
+                while A(k) > 0:<br>
+                &nbsp;&nbsp;while B(k) <= A(j): C(n)=B(k); n++; k++<br>
+                    &nbsp;&nbsp;C(n) = A(j); n++; j++<br>
+                    C(n) = B(k)<br>
+                    output C(4)
+            </div>
+
+            <div class="array-section">
+                <div class="array-label">
+                    <div class="dot" style="background: var(--a-color);"></div> Mảng A (Dừng tại -100)
+                </div>
+                <div class="array-display" id="array-a"></div>
+            </div>
+            <div class="array-section">
+                <div class="array-label">
+                    <div class="dot" style="background: var(--b-color);"></div> Mảng B
+                </div>
+                <div class="array-display" id="array-b"></div>
+            </div>
+            <div class="array-section">
+                <div class="array-label">
+                    <div class="dot" style="background: var(--c-color);"></div> Mảng C (Kết quả gộp)
+                </div>
+                <div class="array-display" id="array-c"></div>
+            </div>
+
+            <div class="vars">
+                <div class="var-box">
+                    <div class="name">j (A)</div>
+                    <div class="val" id="val-j">0</div>
+                </div>
+                <div class="var-box">
+                    <div class="name">k (B)</div>
+                    <div class="val" id="val-k">0</div>
+                </div>
+                <div class="var-box">
+                    <div class="name">n (C)</div>
+                    <div class="val" id="val-n">0</div>
+                </div>
+            </div>
+
+            <div class="step-info" id="status">Bấm "Tiếp theo" để bắt đầu.</div>
+
+            <div class="controls">
+                <button id="btn-next">Tiếp theo</button>
+                <button id="btn-reset" style="background: #4b5563; color: #fff;">Reset</button>
+            </div>
+
+            <div class="result-box">
+                <p>C(4) = </p>
+                <div class="result-val" id="result">?</div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        const A = [12, 41, 52, 57, 77, -100];
+        const B = [17, 34, 81];
+        let C = [];
+        let j = 0, k = 0, n = 0;
+        let phase = 'OUTER'; // OUTER, INNER, DONE
+
+        const arrA = document.getElementById('array-a');
+        const arrB = document.getElementById('array-b');
+        const arrC = document.getElementById('array-c');
+        const valJ = document.getElementById('val-j');
+        const valK = document.getElementById('val-k');
+        const valN = document.getElementById('val-n');
+        const status = document.getElementById('status');
+        const btnNext = document.getElementById('btn-next');
+        const btnReset = document.getElementById('btn-reset');
+        const result = document.getElementById('result');
+
+        function render() {
+            arrA.innerHTML = A.map((v, i) => `<div class="array-item a ${i < j ? 'used' : ''} ${i === j ? 'active' : ''}"><span class="idx">${i}</span>${v}</div>`).join('');
+            arrB.innerHTML = B.map((v, i) => `<div class="array-item b ${i < k ? 'used' : ''} ${i === k ? 'active' : ''}"><span class="idx">${i}</span>${v}</div>`).join('');
+            arrC.innerHTML = C.map((v, i) => `<div class="array-item c ${i === n - 1 ? 'active' : ''}"><span class="idx">${i}</span>${v}</div>`).join('');
+            valJ.innerText = j;
+            valK.innerText = k;
+            valN.innerText = n;
+        }
+
+        function init() {
+            C = [];
+            j = 0; k = 0; n = 0;
+            phase = 'OUTER';
+            status.innerText = 'Bấm "Tiếp theo" để bắt đầu.';
+            result.innerText = '?';
+            btnNext.disabled = false;
+            render();
+        }
+
+        btnNext.onclick = () => {
+            if (phase === 'DONE') return;
+
+            if (A[j] <= 0) {
+                // End condition: A[j] is the sentinel
+                if (k < B.length) {
+                    C[n] = B[k];
+                    n++;
+                    status.innerHTML = `A[${j}] <= 0, kết thúc. Thêm B[${k}] = ${B[k]} vào C.`;
+                }
+                phase = 'DONE';
+                btnNext.disabled = true;
+                result.innerText = C[4] !== undefined ? C[4] : 'N/A';
+                render();
+                return;
+            }
+
+            // Inner loop: while B(k) <= A(j)
+            if (k < B.length && B[k] <= A[j]) {
+                C[n] = B[k];
+                status.innerHTML = `B[${k}] = ${B[k]} <= A[${j}] = ${A[j]} → Thêm ${B[k]} vào C[${n}]`;
+                n++;
+                k++;
+                render();
+                return;
+            }
+
+            // Add A[j] to C
+            C[n] = A[j];
+            status.innerHTML = `Thêm A[${j}] = ${A[j]} vào C[${n}]`;
+            n++;
+            j++;
+            render();
+        };
+
+        btnReset.onclick = init;
+        init();
+    </script>
+</body>
+
+</html>

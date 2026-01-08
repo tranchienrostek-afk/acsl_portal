@@ -1,0 +1,371 @@
+<!DOCTYPE html>
+<html lang="vi">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Mô phỏng Digital Electronics - ACSL</title>
+    <link
+        href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;800&family=JetBrains+Mono:wght@400;700&display=swap"
+        rel="stylesheet">
+    <style>
+        :root {
+            --bg: #0a0a0f;
+            --card: rgba(20, 20, 30, 0.9);
+            --accent: #f97316;
+            --text: #f1f5f9;
+            --dim: #94a3b8;
+            --on: #22c55e;
+            --off: #ef4444;
+        }
+
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Inter', sans-serif;
+            background: var(--bg);
+            color: var(--text);
+            padding: 30px 15px;
+        }
+
+        .container {
+            max-width: 1000px;
+            margin: 0 auto;
+        }
+
+        header {
+            text-align: center;
+            margin-bottom: 30px;
+        }
+
+        h1 {
+            font-size: 2rem;
+            background: linear-gradient(to right, #f97316, #ef4444);
+            -webkit-background-clip: text;
+            background-clip: text;
+            -webkit-text-fill-color: transparent;
+        }
+
+        h2 {
+            color: var(--accent);
+            margin: 20px 0 15px;
+            font-size: 1.2rem;
+        }
+
+        .card {
+            background: var(--card);
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            border-radius: 16px;
+            padding: 20px;
+            margin-bottom: 20px;
+        }
+
+        .grid {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 20px;
+        }
+
+        @media (max-width: 700px) {
+            .grid {
+                grid-template-columns: 1fr;
+            }
+        }
+
+        .gate-sim {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            gap: 15px;
+        }
+
+        .inputs {
+            display: flex;
+            gap: 20px;
+        }
+
+        .input-toggle {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            gap: 5px;
+        }
+
+        .toggle {
+            width: 60px;
+            height: 32px;
+            background: var(--off);
+            border-radius: 16px;
+            cursor: pointer;
+            position: relative;
+            transition: 0.3s;
+        }
+
+        .toggle.on {
+            background: var(--on);
+        }
+
+        .toggle::after {
+            content: '';
+            position: absolute;
+            top: 4px;
+            left: 4px;
+            width: 24px;
+            height: 24px;
+            background: #fff;
+            border-radius: 50%;
+            transition: 0.3s;
+        }
+
+        .toggle.on::after {
+            left: 32px;
+        }
+
+        .gate-select {
+            display: flex;
+            gap: 10px;
+            flex-wrap: wrap;
+            justify-content: center;
+        }
+
+        .gate-btn {
+            padding: 10px 20px;
+            border: 2px solid rgba(255, 255, 255, 0.1);
+            border-radius: 10px;
+            background: rgba(255, 255, 255, 0.05);
+            color: var(--text);
+            cursor: pointer;
+            font-weight: 600;
+        }
+
+        .gate-btn.active {
+            background: var(--accent);
+            color: #000;
+            border-color: var(--accent);
+        }
+
+        .output {
+            font-size: 2rem;
+            font-weight: 800;
+            padding: 20px 40px;
+            border-radius: 15px;
+        }
+
+        .output.on {
+            background: rgba(34, 197, 94, 0.2);
+            color: var(--on);
+        }
+
+        .output.off {
+            background: rgba(239, 68, 68, 0.2);
+            color: var(--off);
+        }
+
+        .gate-table {
+            width: 100%;
+            border-collapse: collapse;
+        }
+
+        .gate-table th,
+        .gate-table td {
+            padding: 10px;
+            text-align: center;
+            border: 1px solid rgba(255, 255, 255, 0.1);
+        }
+
+        .gate-table th {
+            background: rgba(249, 115, 22, 0.2);
+            color: var(--accent);
+        }
+
+        .gate-table td.on {
+            color: var(--on);
+        }
+
+        .gate-table td.off {
+            color: var(--off);
+        }
+
+        .gate-symbol {
+            font-size: 2.5rem;
+            margin: 10px 0;
+        }
+    </style>
+</head>
+
+<body>
+    <div class="container">
+        <header>
+            <h1>⚡ Mô phỏng Digital Electronics</h1>
+            <p style="color: var(--dim);">Các cổng logic cho ACSL</p>
+        </header>
+
+        <div class="grid">
+            <div class="card">
+                <h2>🔌 Mô phỏng cổng logic</h2>
+                <div class="gate-sim">
+                    <div class="gate-select">
+                        <button class="gate-btn active" onclick="setGate('AND')">AND</button>
+                        <button class="gate-btn" onclick="setGate('OR')">OR</button>
+                        <button class="gate-btn" onclick="setGate('NOT')">NOT</button>
+                        <button class="gate-btn" onclick="setGate('NAND')">NAND</button>
+                        <button class="gate-btn" onclick="setGate('NOR')">NOR</button>
+                        <button class="gate-btn" onclick="setGate('XOR')">XOR</button>
+                        <button class="gate-btn" onclick="setGate('XNOR')">XNOR</button>
+                    </div>
+
+                    <div class="gate-symbol" id="gateSymbol">AND</div>
+
+                    <div class="inputs">
+                        <div class="input-toggle">
+                            <span>Input A</span>
+                            <div class="toggle" id="toggleA" onclick="toggleInput('A')"></div>
+                            <span id="valA">0</span>
+                        </div>
+                        <div class="input-toggle" id="inputB">
+                            <span>Input B</span>
+                            <div class="toggle" id="toggleB" onclick="toggleInput('B')"></div>
+                            <span id="valB">0</span>
+                        </div>
+                    </div>
+
+                    <div class="output off" id="output">Output: 0</div>
+                </div>
+            </div>
+
+            <div class="card">
+                <h2>📊 Bảng chân lý hiện tại</h2>
+                <div id="truthTable"></div>
+            </div>
+        </div>
+
+        <div class="card">
+            <h2>📖 Tất cả cổng logic</h2>
+            <table class="gate-table">
+                <tr>
+                    <th>Cổng</th>
+                    <th>Ký hiệu</th>
+                    <th>Biểu thức</th>
+                    <th>Mô tả</th>
+                </tr>
+                <tr>
+                    <td>AND</td>
+                    <td>A · B</td>
+                    <td>AB</td>
+                    <td>1 khi cả A và B đều 1</td>
+                </tr>
+                <tr>
+                    <td>OR</td>
+                    <td>A + B</td>
+                    <td>A + B</td>
+                    <td>1 khi A hoặc B là 1</td>
+                </tr>
+                <tr>
+                    <td>NOT</td>
+                    <td>Ā</td>
+                    <td>¬A</td>
+                    <td>Đảo ngược A</td>
+                </tr>
+                <tr>
+                    <td>NAND</td>
+                    <td>(AB)̄</td>
+                    <td>¬(AB)</td>
+                    <td>NOT của AND</td>
+                </tr>
+                <tr>
+                    <td>NOR</td>
+                    <td>(A+B)̄</td>
+                    <td>¬(A+B)</td>
+                    <td>NOT của OR</td>
+                </tr>
+                <tr>
+                    <td>XOR</td>
+                    <td>A ⊕ B</td>
+                    <td>A⊕B</td>
+                    <td>1 khi A ≠ B</td>
+                </tr>
+                <tr>
+                    <td>XNOR</td>
+                    <td>A ⊙ B</td>
+                    <td>¬(A⊕B)</td>
+                    <td>1 khi A = B</td>
+                </tr>
+            </table>
+        </div>
+    </div>
+
+    <script>
+        let inputA = 0, inputB = 0, currentGate = 'AND';
+
+        const gates = {
+            AND: { fn: (a, b) => a & b, symbol: '∧', unary: false },
+            OR: { fn: (a, b) => a | b, symbol: '∨', unary: false },
+            NOT: { fn: (a) => 1 - a, symbol: '¬', unary: true },
+            NAND: { fn: (a, b) => 1 - (a & b), symbol: '⊼', unary: false },
+            NOR: { fn: (a, b) => 1 - (a | b), symbol: '⊽', unary: false },
+            XOR: { fn: (a, b) => a ^ b, symbol: '⊕', unary: false },
+            XNOR: { fn: (a, b) => 1 - (a ^ b), symbol: '⊙', unary: false }
+        };
+
+        function toggleInput(input) {
+            if (input === 'A') { inputA = 1 - inputA; }
+            else { inputB = 1 - inputB; }
+            update();
+        }
+
+        function setGate(gate) {
+            currentGate = gate;
+            document.querySelectorAll('.gate-btn').forEach(b => b.classList.remove('active'));
+            event.target.classList.add('active');
+            document.getElementById('inputB').style.display = gates[gate].unary ? 'none' : 'flex';
+            update();
+        }
+
+        function update() {
+            const g = gates[currentGate];
+            const result = g.unary ? g.fn(inputA) : g.fn(inputA, inputB);
+
+            document.getElementById('toggleA').classList.toggle('on', inputA === 1);
+            document.getElementById('toggleB').classList.toggle('on', inputB === 1);
+            document.getElementById('valA').innerText = inputA;
+            document.getElementById('valB').innerText = inputB;
+            document.getElementById('gateSymbol').innerText = `${currentGate} (${g.symbol})`;
+
+            const out = document.getElementById('output');
+            out.innerText = `Output: ${result}`;
+            out.className = 'output ' + (result ? 'on' : 'off');
+
+            renderTruthTable();
+        }
+
+        function renderTruthTable() {
+            const g = gates[currentGate];
+            let html = '<table class="gate-table">';
+            if (g.unary) {
+                html += '<tr><th>A</th><th>Output</th></tr>';
+                for (let a = 0; a <= 1; a++) {
+                    const r = g.fn(a);
+                    html += `<tr><td class="${a ? 'on' : 'off'}">${a}</td><td class="${r ? 'on' : 'off'}">${r}</td></tr>`;
+                }
+            } else {
+                html += '<tr><th>A</th><th>B</th><th>Output</th></tr>';
+                for (let a = 0; a <= 1; a++) {
+                    for (let b = 0; b <= 1; b++) {
+                        const r = g.fn(a, b);
+                        html += `<tr><td class="${a ? 'on' : 'off'}">${a}</td><td class="${b ? 'on' : 'off'}">${b}</td><td class="${r ? 'on' : 'off'}">${r}</td></tr>`;
+                    }
+                }
+            }
+            html += '</table>';
+            document.getElementById('truthTable').innerHTML = html;
+        }
+
+        update();
+    </script>
+</body>
+
+</html>

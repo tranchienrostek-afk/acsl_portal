@@ -1,0 +1,489 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Universal Base Converter - Ultimate Edition</title>
+    <style>
+        :root {
+            --bg: #0f172a;
+            --panel: #1e293b;
+            --accent: #38bdf8; /* Blue */
+            --accent-2: #f472b6; /* Pink */
+            --accent-3: #4ade80; /* Green */
+            --text: #e2e8f0;
+            --border: #334155;
+            --font-mono: 'Fira Code', 'Consolas', monospace;
+        }
+
+        * { box-sizing: border-box; }
+
+        body {
+            background-color: var(--bg);
+            color: var(--text);
+            font-family: 'Segoe UI', sans-serif;
+            margin: 0;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            min-height: 100vh;
+            padding: 20px;
+        }
+
+        h1 {
+            text-transform: uppercase;
+            letter-spacing: 2px;
+            color: var(--accent);
+            text-shadow: 0 0 15px rgba(56, 189, 248, 0.5);
+            margin-bottom: 30px;
+        }
+
+        /* CONTROLS */
+        .controls {
+            background: var(--panel);
+            padding: 25px;
+            border-radius: 12px;
+            border: 1px solid var(--border);
+            display: flex;
+            gap: 15px;
+            flex-wrap: wrap;
+            justify-content: center;
+            box-shadow: 0 10px 30px rgba(0,0,0,0.5);
+            max-width: 900px;
+            width: 100%;
+        }
+
+        .input-group {
+            display: flex;
+            flex-direction: column;
+            gap: 5px;
+        }
+
+        label { font-size: 0.8rem; color: #94a3b8; font-weight: bold; }
+
+        input, select {
+            padding: 12px;
+            background: #0f172a;
+            border: 1px solid var(--border);
+            color: white;
+            border-radius: 6px;
+            font-family: var(--font-mono);
+            font-size: 1.1rem;
+            outline: none;
+        }
+
+        input:focus, select:focus { border-color: var(--accent); }
+
+        button {
+            padding: 0 30px;
+            background: linear-gradient(135deg, var(--accent), #2563eb);
+            color: white;
+            border: none;
+            border-radius: 6px;
+            font-weight: bold;
+            cursor: pointer;
+            transition: transform 0.2s;
+            margin-top: 18px; /* Align with inputs */
+        }
+        
+        button:hover { transform: translateY(-2px); box-shadow: 0 5px 15px rgba(56, 189, 248, 0.4); }
+
+        /* VISUALIZATION STAGE */
+        .stage {
+            width: 100%;
+            max-width: 900px;
+            margin-top: 30px;
+            display: flex;
+            flex-direction: column;
+            gap: 30px;
+        }
+
+        .panel {
+            background: var(--panel);
+            border-radius: 10px;
+            padding: 20px;
+            border: 1px solid var(--border);
+            position: relative;
+            overflow: hidden;
+        }
+
+        .panel-header {
+            position: absolute;
+            top: 0; left: 0;
+            background: rgba(0,0,0,0.3);
+            padding: 5px 15px;
+            font-size: 0.8rem;
+            color: var(--accent-3);
+            border-bottom-right-radius: 10px;
+            font-weight: bold;
+        }
+
+        /* MATH VISUALS */
+        .math-row {
+            display: flex;
+            align-items: center;
+            font-family: var(--font-mono);
+            margin-bottom: 10px;
+            font-size: 1.1rem;
+            animation: slideIn 0.5s ease;
+        }
+        
+        .digit-box {
+            display: inline-block;
+            width: 30px;
+            text-align: center;
+            font-weight: bold;
+            color: var(--accent-2);
+        }
+        
+        .power { font-size: 0.7em; vertical-align: super; color: #94a3b8; }
+        .operator { margin: 0 10px; color: #64748b; }
+        .result-part { color: var(--accent-3); font-weight: bold; }
+
+        /* DIVISION VISUALS */
+        .division-table {
+            width: 100%;
+            border-collapse: collapse;
+            font-family: var(--font-mono);
+            margin-top: 20px;
+        }
+        .division-table th { text-align: left; color: #94a3b8; border-bottom: 1px solid var(--border); padding: 5px; }
+        .division-table td { padding: 8px; border-bottom: 1px solid #334155; }
+        .rem-highlight { color: var(--accent-2); font-weight: bold; }
+        .arrow-up { color: var(--accent-2); font-size: 1.2rem; display: block; text-align: right; margin-top: 10px; }
+
+        /* GROUPING VISUALS (Binary <-> Oct/Hex) */
+        .grouping-container {
+            display: flex;
+            justify-content: center;
+            gap: 20px;
+            flex-wrap: wrap;
+            margin-top: 20px;
+        }
+
+        .group-block {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            background: rgba(255,255,255,0.05);
+            padding: 15px;
+            border-radius: 8px;
+            border: 1px dashed var(--border);
+            position: relative;
+        }
+        
+        .group-bits { font-family: var(--font-mono); font-size: 1.5rem; letter-spacing: 5px; color: var(--accent); }
+        .group-hex { font-family: var(--font-mono); font-size: 1.5rem; color: var(--accent-2); font-weight: bold; margin-top: 10px; }
+        .connector { height: 20px; width: 2px; background: #64748b; margin: 5px 0; }
+        
+        .final-result {
+            font-size: 2rem;
+            text-align: center;
+            color: white;
+            font-weight: bold;
+            font-family: var(--font-mono);
+            margin-top: 10px;
+            padding: 20px;
+            background: linear-gradient(90deg, rgba(56, 189, 248, 0.1), rgba(244, 114, 182, 0.1));
+            border-radius: 10px;
+            border: 1px solid var(--accent);
+        }
+
+        @keyframes slideIn { from { opacity: 0; transform: translateX(-20px); } to { opacity: 1; transform: translateX(0); } }
+
+    </style>
+</head>
+<body>
+
+    <h1>Base Converter <span style="color:var(--accent-2)">Ultimate</span></h1>
+
+    <div class="controls">
+        <div class="input-group">
+            <label>Số cần chuyển</label>
+            <input type="text" id="numInput" value="10110" placeholder="VD: 10110, A2F...">
+        </div>
+        <div class="input-group">
+            <label>Từ Hệ (Base)</label>
+            <select id="fromBase"></select>
+        </div>
+        <div class="input-group">
+            <label>Sang Hệ (Base)</label>
+            <select id="toBase"></select>
+        </div>
+        <button onclick="convert()">PHÂN TÍCH & TÍNH TOÁN</button>
+    </div>
+
+    <div class="stage" id="stage">
+        <div style="text-align:center; color:#64748b; margin-top:50px;">
+            Nhấn "Phân tích" để xem thuật toán hoạt động step-by-step.
+        </div>
+    </div>
+
+    <script>
+        const DIGITS = "0123456789ABCDEF";
+
+        // 1. Setup Select Options (2-16)
+        function init() {
+            const fromSel = document.getElementById('fromBase');
+            const toSel = document.getElementById('toBase');
+            
+            for(let i=2; i<=16; i++) {
+                let name = i;
+                if(i===2) name = "2 (Binary)";
+                if(i===8) name = "8 (Octal)";
+                if(i===10) name = "10 (Decimal)";
+                if(i===16) name = "16 (Hex)";
+                
+                fromSel.innerHTML += `<option value="${i}">${name}</option>`;
+                toSel.innerHTML += `<option value="${i}">${name}</option>`;
+            }
+            fromSel.value = 2;
+            toSel.value = 16;
+        }
+
+        // 2. Core Logic
+        function convert() {
+            const inputVal = document.getElementById('numInput').value.toUpperCase().trim();
+            const fromBase = parseInt(document.getElementById('fromBase').value);
+            const toBase = parseInt(document.getElementById('toBase').value);
+            const stage = document.getElementById('stage');
+            stage.innerHTML = '';
+
+            // Validation
+            if(!inputVal) return;
+            for(let char of inputVal) {
+                if(DIGITS.indexOf(char) === -1 || DIGITS.indexOf(char) >= fromBase) {
+                    stage.innerHTML = `<div class="panel" style="border-color:red; color:red;">Lỗi: Ký tự '${char}' không hợp lệ trong hệ cơ số ${fromBase}</div>`;
+                    return;
+                }
+            }
+
+            // --- SPECIAL CASE: POWER OF 2 GROUPING (2, 4, 8, 16) ---
+            // Chỉ kích hoạt khi một trong 2 là hệ 2, và cái kia là 4, 8, 16
+            const isPowerOf2 = (b) => [2, 4, 8, 16].includes(b);
+            if (isPowerOf2(fromBase) && isPowerOf2(toBase) && (fromBase === 2 || toBase === 2) && fromBase !== toBase) {
+                visualizeGrouping(inputVal, fromBase, toBase, stage);
+                return;
+            }
+
+            // --- STANDARD CASE: MATH (Base X -> Dec -> Base Y) ---
+            
+            // Step 1: To Decimal
+            let decimalVal = 0;
+            if (fromBase !== 10) {
+                decimalVal = visualizeToDecimal(inputVal, fromBase, stage);
+            } else {
+                decimalVal = parseInt(inputVal, 10);
+                stage.innerHTML += `
+                    <div class="panel">
+                        <div class="panel-header">INPUT LÀ DECIMAL</div>
+                        <div style="font-size:1.5rem; text-align:center">${decimalVal}</div>
+                    </div>`;
+            }
+
+            // Step 2: From Decimal to Target
+            if (toBase !== 10) {
+                visualizeFromDecimal(decimalVal, toBase, stage);
+            } else {
+                stage.innerHTML += `
+                    <div class="final-result">
+                        KẾT QUẢ: ${decimalVal}
+                        <div style="font-size:0.8rem; color:#94a3b8; margin-top:5px">HỆ 10 (DECIMAL)</div>
+                    </div>`;
+            }
+        }
+
+        // --- ALGO 1: TO DECIMAL (EXPANSION) ---
+        function visualizeToDecimal(str, base, container) {
+            let panel = document.createElement('div');
+            panel.className = 'panel';
+            panel.innerHTML = `<div class="panel-header">BƯỚC 1: CHUYỂN VỀ HỆ 10 (DECIMAL)</div>`;
+            
+            let explanation = document.createElement('div');
+            explanation.style.marginBottom = '15px';
+            explanation.innerHTML = `Công thức: <code>Tổng(Chữ số × Cơ số<sup>Vị trí</sup>)</code>`;
+            panel.appendChild(explanation);
+
+            let len = str.length;
+            let total = 0;
+            let formulaHTML = "";
+            let calcHTML = "";
+
+            for(let i=0; i<len; i++) {
+                let digitChar = str[i];
+                let digitVal = DIGITS.indexOf(digitChar);
+                let power = len - 1 - i;
+                let val = digitVal * Math.pow(base, power);
+                total += val;
+
+                // Visual row
+                let row = document.createElement('div');
+                row.className = 'math-row';
+                row.innerHTML = `
+                    <span class="digit-box">${digitChar}</span> 
+                    <span class="operator">×</span> 
+                    ${base}<span class="power">${power}</span>
+                    <span class="operator">=</span>
+                    <span class="result-part">${val}</span>
+                `;
+                panel.appendChild(row);
+
+                formulaHTML += `${val}`;
+                if (i < len -1) formulaHTML += " + ";
+            }
+
+            let sumRow = document.createElement('div');
+            sumRow.className = 'math-row';
+            sumRow.style.borderTop = '1px solid #334155';
+            sumRow.style.marginTop = '10px';
+            sumRow.style.paddingTop = '10px';
+            sumRow.innerHTML = `Tổng: <span style="color:var(--accent-3); margin-left:10px">${formulaHTML} = <b>${total}</b></span>`;
+            panel.appendChild(sumRow);
+
+            container.appendChild(panel);
+            return total;
+        }
+
+        // --- ALGO 2: FROM DECIMAL (REPEATED DIVISION) ---
+        function visualizeFromDecimal(decNum, base, container) {
+            let panel = document.createElement('div');
+            panel.className = 'panel';
+            panel.innerHTML = `<div class="panel-header">BƯỚC 2: CHUYỂN TỪ HỆ 10 SANG HỆ ${base}</div>`;
+            
+            let explanation = document.createElement('div');
+            explanation.innerHTML = `Phương pháp: <code>Chia lấy dư liên tiếp</code>. Đọc số dư từ dưới lên.`;
+            panel.appendChild(explanation);
+
+            let table = document.createElement('table');
+            table.className = 'division-table';
+            table.innerHTML = `<tr><th>Phép chia</th><th>Thương (Quotient)</th><th>Dư (Remainder)</th><th>Ký số</th></tr>`;
+
+            let current = decNum;
+            let resultStr = "";
+            let steps = [];
+
+            if (current === 0) {
+                steps.push({div: `0 / ${base}`, quo: 0, rem: 0, digit: '0'});
+                resultStr = "0";
+            } else {
+                while(current > 0) {
+                    let rem = current % base;
+                    let quo = Math.floor(current / base);
+                    let digit = DIGITS[rem];
+                    
+                    steps.push({
+                        div: `${current} ÷ ${base}`,
+                        quo: quo,
+                        rem: rem,
+                        digit: digit
+                    });
+                    
+                    resultStr = digit + resultStr;
+                    current = quo;
+                }
+            }
+
+            steps.forEach(s => {
+                let tr = document.createElement('tr');
+                tr.innerHTML = `
+                    <td>${s.div}</td>
+                    <td>${s.quo}</td>
+                    <td class="rem-highlight">${s.rem}</td>
+                    <td style="color:var(--accent); font-weight:bold; border:1px solid var(--accent)">${s.digit}</td>
+                `;
+                table.appendChild(tr);
+            });
+
+            panel.appendChild(table);
+            panel.innerHTML += `<div class="arrow-up">⬆ Đọc ngược lên</div>`;
+            container.appendChild(panel);
+
+            container.innerHTML += `
+                <div class="final-result">
+                    KẾT QUẢ: ${resultStr}
+                    <div style="font-size:0.8rem; color:#94a3b8; margin-top:5px">HỆ ${base}</div>
+                </div>`;
+        }
+
+        // --- ALGO 3: SPECIAL GROUPING (BINARY <-> 4, 8, 16) ---
+        function visualizeGrouping(str, fromB, toB, container) {
+            let panel = document.createElement('div');
+            panel.className = 'panel';
+            panel.style.borderColor = 'var(--accent-2)'; // Special pink border
+            panel.innerHTML = `<div class="panel-header" style="color:var(--accent-2)">PHƯƠNG PHÁP NHÓM BIT (GROUPING)</div>`;
+
+            let groupSize = 0;
+            if (fromB === 2) groupSize = Math.log2(toB);
+            else groupSize = Math.log2(fromB);
+
+            panel.innerHTML += `<div style="margin-bottom:20px">
+                Chuyển đổi giữa hệ 2 và hệ ${fromB===2 ? toB : fromB} sử dụng nhóm <b>${groupSize} bit</b>.
+                Không cần qua trung gian hệ 10!
+            </div>`;
+
+            let groupContainer = document.createElement('div');
+            groupContainer.className = 'grouping-container';
+
+            let finalRes = "";
+
+            if (fromB === 2) {
+                // BINARY -> OTHER
+                // Pad left with zeros to fit group size
+                let padded = str;
+                while (padded.length % groupSize !== 0) padded = "0" + padded;
+                
+                // Split logic
+                for (let i = 0; i < padded.length; i += groupSize) {
+                    let chunk = padded.substring(i, i + groupSize);
+                    let val = parseInt(chunk, 2);
+                    let hexDigit = DIGITS[val];
+                    
+                    finalRes += hexDigit;
+
+                    let block = document.createElement('div');
+                    block.className = 'group-block';
+                    block.innerHTML = `
+                        <div class="group-bits">${chunk}</div>
+                        <div class="connector"></div>
+                        <div class="group-hex">${hexDigit}</div>
+                    `;
+                    groupContainer.appendChild(block);
+                }
+            } else {
+                // OTHER -> BINARY
+                for (let char of str) {
+                    let val = parseInt(char, fromB); // Parse hex/oct digit
+                    let binChunk = val.toString(2);
+                    // Pad binary chunk
+                    while (binChunk.length < groupSize) binChunk = "0" + binChunk;
+                    
+                    finalRes += binChunk;
+
+                    let block = document.createElement('div');
+                    block.className = 'group-block';
+                    block.style.flexDirection = 'column-reverse'; // Flip visual
+                    block.innerHTML = `
+                        <div class="group-bits">${binChunk}</div>
+                        <div class="connector"></div>
+                        <div class="group-hex">${char}</div>
+                    `;
+                    groupContainer.appendChild(block);
+                }
+                // Remove leading zeros for final result display usually, but keep logic pure here
+                finalRes = finalRes.replace(/^0+/, '') || '0';
+            }
+
+            panel.appendChild(groupContainer);
+            container.appendChild(panel);
+            
+            container.innerHTML += `
+                <div class="final-result" style="border-color:var(--accent-2)">
+                    KẾT QUẢ: ${finalRes}
+                    <div style="font-size:0.8rem; color:#94a3b8; margin-top:5px">HỆ ${toB}</div>
+                </div>`;
+        }
+
+        init();
+    </script>
+</body>
+</html>

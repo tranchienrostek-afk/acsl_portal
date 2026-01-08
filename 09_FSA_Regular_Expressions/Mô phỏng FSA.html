@@ -1,0 +1,326 @@
+<!DOCTYPE html>
+<html lang="vi">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Mô phỏng FSA & Regex - ACSL</title>
+    <link
+        href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;800&family=JetBrains+Mono:wght@400;700&display=swap"
+        rel="stylesheet">
+    <style>
+        :root {
+            --bg: #0a0a0f;
+            --card: rgba(20, 20, 30, 0.9);
+            --accent: #8b5cf6;
+            --text: #f1f5f9;
+            --dim: #94a3b8;
+            --success: #22c55e;
+            --error: #ef4444;
+        }
+
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Inter', sans-serif;
+            background: var(--bg);
+            color: var(--text);
+            padding: 30px 15px;
+        }
+
+        .container {
+            max-width: 1000px;
+            margin: 0 auto;
+        }
+
+        header {
+            text-align: center;
+            margin-bottom: 30px;
+        }
+
+        h1 {
+            font-size: 2rem;
+            background: linear-gradient(to right, #8b5cf6, #06b6d4);
+            -webkit-background-clip: text;
+            background-clip: text;
+            -webkit-text-fill-color: transparent;
+        }
+
+        h2 {
+            color: var(--accent);
+            margin: 20px 0 15px;
+            font-size: 1.2rem;
+        }
+
+        .card {
+            background: var(--card);
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            border-radius: 16px;
+            padding: 20px;
+            margin-bottom: 20px;
+        }
+
+        .grid {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 20px;
+        }
+
+        @media (max-width: 700px) {
+            .grid {
+                grid-template-columns: 1fr;
+            }
+        }
+
+        .regex-input {
+            width: 100%;
+            padding: 12px;
+            background: #000;
+            border: 1px solid rgba(255, 255, 255, 0.2);
+            border-radius: 10px;
+            font-family: 'JetBrains Mono', monospace;
+            color: var(--text);
+            font-size: 1rem;
+            margin-bottom: 10px;
+        }
+
+        .regex-input:focus {
+            outline: none;
+            border-color: var(--accent);
+        }
+
+        .test-strings {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 10px;
+            margin: 15px 0;
+        }
+
+        .test-btn {
+            padding: 8px 15px;
+            background: rgba(255, 255, 255, 0.05);
+            border: 2px solid rgba(255, 255, 255, 0.1);
+            border-radius: 8px;
+            cursor: pointer;
+            color: var(--text);
+            font-family: 'JetBrains Mono', monospace;
+        }
+
+        .test-btn.match {
+            background: rgba(34, 197, 94, 0.2);
+            border-color: var(--success);
+        }
+
+        .test-btn.no-match {
+            background: rgba(239, 68, 68, 0.2);
+            border-color: var(--error);
+        }
+
+        button {
+            padding: 10px 20px;
+            border-radius: 8px;
+            border: none;
+            background: var(--accent);
+            color: #fff;
+            font-weight: 600;
+            cursor: pointer;
+        }
+
+        .fsa-diagram {
+            background: #000;
+            border-radius: 10px;
+            padding: 20px;
+            text-align: center;
+            min-height: 150px;
+        }
+
+        .state {
+            display: inline-block;
+            width: 50px;
+            height: 50px;
+            border: 3px solid var(--accent);
+            border-radius: 50%;
+            line-height: 44px;
+            margin: 0 10px;
+            font-weight: 700;
+        }
+
+        .state.final {
+            border-width: 6px;
+        }
+
+        .state.active {
+            background: var(--accent);
+            color: #000;
+        }
+
+        .arrow {
+            color: var(--dim);
+            font-size: 1.5rem;
+        }
+
+        .ref-table {
+            width: 100%;
+            border-collapse: collapse;
+        }
+
+        .ref-table th,
+        .ref-table td {
+            padding: 10px;
+            text-align: left;
+            border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+        }
+
+        .ref-table th {
+            color: var(--accent);
+        }
+    </style>
+</head>
+
+<body>
+    <div class="container">
+        <header>
+            <h1>🔄 Mô phỏng FSA & Regular Expressions</h1>
+            <p style="color: var(--dim);">Finite State Automata và Biểu thức chính quy</p>
+        </header>
+
+        <div class="grid">
+            <div class="card">
+                <h2>📝 Kiểm tra Regex</h2>
+                <input class="regex-input" id="regex" placeholder="Nhập regex..." value="xx*yy*">
+                <input class="regex-input" id="test-str" placeholder="Nhập chuỗi kiểm tra..." value="xxyyy">
+                <button onclick="testRegex()">Kiểm tra</button>
+                <div id="result" style="margin-top: 15px; font-size: 1.1rem;"></div>
+
+                <h2 style="margin-top: 20px;">Ví dụ mẫu</h2>
+                <div class="test-strings">
+                    <button class="test-btn" onclick="setExample('xx*yy*', 'xy')">xx*yy* → xy</button>
+                    <button class="test-btn" onclick="setExample('xx*yy*', 'xxxyy')">xx*yy* → xxxyy</button>
+                    <button class="test-btn" onclick="setExample('(ab)*', 'abab')">(...)* → abab</button>
+                    <button class="test-btn" onclick="setExample('a|b', 'a')">a|b → a</button>
+                </div>
+            </div>
+
+            <div class="card">
+                <h2>📖 Cú pháp Regex</h2>
+                <table class="ref-table">
+                    <tr>
+                        <th>Ký hiệu</th>
+                        <th>Ý nghĩa</th>
+                        <th>Ví dụ</th>
+                    </tr>
+                    <tr>
+                        <td><code>*</code></td>
+                        <td>0 hoặc nhiều lần</td>
+                        <td>a* = ε, a, aa, aaa...</td>
+                    </tr>
+                    <tr>
+                        <td><code>+</code></td>
+                        <td>1 hoặc nhiều lần</td>
+                        <td>a+ = a, aa, aaa...</td>
+                    </tr>
+                    <tr>
+                        <td><code>?</code></td>
+                        <td>0 hoặc 1 lần</td>
+                        <td>a? = ε hoặc a</td>
+                    </tr>
+                    <tr>
+                        <td><code>|</code></td>
+                        <td>Hoặc (union)</td>
+                        <td>a|b = a hoặc b</td>
+                    </tr>
+                    <tr>
+                        <td><code>(...)</code></td>
+                        <td>Nhóm</td>
+                        <td>(ab)* = ε, ab, abab...</td>
+                    </tr>
+                    <tr>
+                        <td><code>[...]</code></td>
+                        <td>Tập ký tự</td>
+                        <td>[abc] = a, b, hoặc c</td>
+                    </tr>
+                </table>
+            </div>
+        </div>
+
+        <div class="card">
+            <h2>🔄 FSA Mẫu: xx*yy*</h2>
+            <p style="color: var(--dim); margin-bottom: 15px;">Chuỗi chấp nhận: 1+ ký tự x theo sau bởi 1+ ký tự y</p>
+            <div class="fsa-diagram">
+                <span class="arrow">→</span>
+                <span class="state" id="state-a">A</span>
+                <span class="arrow">—x→</span>
+                <span class="state" id="state-b">B</span>
+                <span class="arrow">—y→</span>
+                <span class="state final" id="state-c">C</span>
+            </div>
+            <div style="text-align: center; margin-top: 15px; color: var(--dim);">
+                <p>A: Trạng thái khởi đầu | B: Đã thấy x (loop x) | C: Trạng thái kết thúc (loop y)</p>
+            </div>
+            <div style="text-align: center; margin-top: 15px;">
+                <input class="regex-input" id="fsa-input" placeholder="Nhập chuỗi để chạy FSA..." value="xxy"
+                    style="max-width: 300px;">
+                <button onclick="runFSA()">Chạy FSA</button>
+                <div id="fsa-result" style="margin-top: 10px;"></div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        function testRegex() {
+            const regex = document.getElementById('regex').value;
+            const str = document.getElementById('test-str').value;
+            const result = document.getElementById('result');
+            try {
+                const re = new RegExp('^' + regex + '$');
+                if (re.test(str)) {
+                    result.innerHTML = `<span style="color: #22c55e;">✓ Khớp!</span> "${str}" khớp với regex /${regex}/`;
+                } else {
+                    result.innerHTML = `<span style="color: #ef4444;">✗ Không khớp!</span> "${str}" không khớp với regex /${regex}/`;
+                }
+            } catch (e) {
+                result.innerHTML = `<span style="color: #ef4444;">Lỗi: ${e.message}</span>`;
+            }
+        }
+
+        function setExample(regex, str) {
+            document.getElementById('regex').value = regex;
+            document.getElementById('test-str').value = str;
+            testRegex();
+        }
+
+        function runFSA() {
+            const input = document.getElementById('fsa-input').value;
+            const result = document.getElementById('fsa-result');
+            const states = ['state-a', 'state-b', 'state-c'];
+            states.forEach(s => document.getElementById(s).classList.remove('active'));
+
+            let state = 'A';
+            let valid = true;
+
+            for (let c of input) {
+                if (state === 'A' && c === 'x') { state = 'B'; }
+                else if (state === 'B' && c === 'x') { state = 'B'; }
+                else if (state === 'B' && c === 'y') { state = 'C'; }
+                else if (state === 'C' && c === 'y') { state = 'C'; }
+                else { valid = false; break; }
+            }
+
+            document.getElementById('state-' + state.toLowerCase()).classList.add('active');
+
+            if (valid && state === 'C') {
+                result.innerHTML = `<span style="color: #22c55e;">✓ Chấp nhận!</span> Kết thúc ở trạng thái ${state}`;
+            } else {
+                result.innerHTML = `<span style="color: #ef4444;">✗ Từ chối!</span> ${valid ? 'Kết thúc ở ' + state + ' (không phải trạng thái kết thúc)' : 'Không có chuyển tiếp hợp lệ'}`;
+            }
+        }
+
+        testRegex();
+    </script>
+</body>
+
+</html>

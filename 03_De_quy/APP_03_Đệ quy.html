@@ -1,0 +1,536 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Visual Recursive Builder</title>
+    <style>
+        :root {
+            --bg: #111827;
+            --panel: #1f2937;
+            --input-bg: #374151;
+            --text: #f3f4f6;
+            --accent: #8b5cf6;
+            --node-pending: #4b5563;
+            --node-active: #f59e0b;
+            --node-done: #10b981;
+            --line: #6b7280;
+        }
+
+        body {
+            font-family: 'Segoe UI', system-ui, sans-serif;
+            background-color: var(--bg);
+            color: var(--text);
+            margin: 0;
+            display: flex;
+            height: 100vh;
+            overflow: hidden;
+        }
+
+        /* SIDEBAR CONFIG */
+        .config-panel {
+            width: 320px;
+            background: var(--panel);
+            padding: 20px;
+            box-shadow: 2px 0 10px rgba(0,0,0,0.5);
+            display: flex;
+            flex-direction: column;
+            gap: 20px;
+            z-index: 10;
+        }
+
+        h1 { margin: 0; font-size: 1.2rem; text-transform: uppercase; letter-spacing: 1px; color: var(--accent); }
+        h2 { font-size: 0.9rem; margin-bottom: 8px; color: #9ca3af; }
+
+        .control-group { background: rgba(0,0,0,0.2); padding: 15px; border-radius: 8px; border: 1px solid #374151; }
+        
+        label { display: block; font-size: 0.8rem; margin-bottom: 5px; color: #d1d5db; }
+        
+        input {
+            width: 100%;
+            background: var(--input-bg);
+            border: 1px solid #4b5563;
+            color: white;
+            padding: 8px;
+            border-radius: 4px;
+            box-sizing: border-box;
+            font-family: monospace;
+            font-size: 1rem;
+        }
+
+        .math-symbol { color: var(--accent); font-weight: bold; }
+
+        button {
+            padding: 12px;
+            background: var(--accent);
+            color: white;
+            border: none;
+            border-radius: 6px;
+            cursor: pointer;
+            font-weight: bold;
+            transition: 0.2s;
+        }
+        button:hover { filter: brightness(1.2); }
+        button.secondary { background: #4b5563; }
+
+        /* VISUALIZATION AREA */
+        .viz-area {
+            flex-grow: 1;
+            overflow: auto;
+            position: relative;
+            background-image: radial-gradient(#374151 1px, transparent 1px);
+            background-size: 20px 20px;
+            display: flex;
+            justify-content: center;
+            padding-top: 50px;
+            align-items: flex-start;
+        }
+
+        /* TREE NODE CSS */
+        .tree {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+        }
+
+        .node-wrapper {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            margin: 0 10px;
+            position: relative;
+        }
+
+        .node-content {
+            width: 60px;
+            height: 60px;
+            border-radius: 50%;
+            background: var(--node-pending);
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            border: 3px solid var(--line);
+            z-index: 2;
+            transition: all 0.4s ease;
+            position: relative;
+        }
+
+        .node-content.active {
+            background: var(--node-active);
+            transform: scale(1.2);
+            box-shadow: 0 0 20px var(--node-active);
+            border-color: white;
+        }
+
+        .node-content.done {
+            background: var(--node-done);
+            border-color: #059669;
+        }
+
+        .arg-val { font-weight: bold; font-size: 1.1rem; }
+        .ret-val { font-size: 0.8rem; color: #111; font-weight: bold; background: rgba(255,255,255,0.8); padding: 2px 5px; border-radius: 4px; margin-top: 2px; display: none;}
+        .node-content.done .ret-val { display: block; }
+
+        .children-container {
+            display: flex;
+            margin-top: 40px; /* Space for lines */
+            position: relative;
+        }
+
+        /* CONNECTORS (SVG LINES) */
+        svg.connector {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            pointer-events: none;
+            z-index: 1;
+        }
+        
+        path.edge {
+            fill: none;
+            stroke: var(--line);
+            stroke-width: 2;
+            transition: stroke 0.5s;
+        }
+        
+        path.edge.active { stroke: var(--node-active); stroke-width: 3; stroke-dasharray: 5; animation: dash 1s linear infinite; }
+        path.edge.done { stroke: var(--node-done); stroke-width: 3; }
+
+        @keyframes dash { to { stroke-dashoffset: -10; } }
+
+        /* LOG PANEL */
+        .log-panel {
+            position: absolute;
+            bottom: 20px;
+            right: 20px;
+            width: 300px;
+            height: 150px;
+            background: rgba(0,0,0,0.8);
+            border: 1px solid #4b5563;
+            border-radius: 8px;
+            padding: 10px;
+            font-family: monospace;
+            font-size: 0.85rem;
+            overflow-y: auto;
+            color: #10b981;
+        }
+    </style>
+</head>
+<body>
+
+    <div class="config-panel">
+        <h1>Recursive Builder</h1>
+        <p style="font-size: 0.8rem; opacity: 0.7;">Tạo hàm f(n) không cần code</p>
+
+        <div class="control-group">
+            <h2>1. Đầu vào (Input)</h2>
+            <label>Tham số gọi ban đầu (n):</label>
+            <input type="number" id="inpN" value="5">
+        </div>
+
+        <div class="control-group">
+            <h2>2. Điều kiện dừng (Base Case)</h2>
+            <label>Nếu n thỏa mãn điều kiện:</label>
+            <input type="text" id="inpBaseCond" value="n <= 1" placeholder="VD: n <= 1">
+            <label>Thì trả về giá trị:</label>
+            <input type="text" id="inpBaseVal" value="1" placeholder="VD: 1">
+        </div>
+
+        <div class="control-group">
+            <h2>3. Bước đệ quy (Recursive Step)</h2>
+            <label>Nếu KHÔNG, trả về công thức:</label>
+            <div style="font-size:0.8rem; color: orange; margin-bottom:5px">Dùng f(x) để gọi đệ quy</div>
+            <input type="text" id="inpRecForm" value="n * f(n-1)" placeholder="VD: n * f(n-1)">
+        </div>
+
+        <div style="display:flex; gap:10px">
+            <button onclick="startVisualization()">CHẠY MÔ HÌNH</button>
+            <button class="secondary" onclick="reset()">Reset</button>
+        </div>
+        
+        <div class="control-group">
+            <label>Tốc độ:</label>
+            <input type="range" id="speedRange" min="100" max="2000" value="800" style="width:100%">
+        </div>
+    </div>
+
+    <div class="viz-area" id="vizArea">
+        </div>
+
+    <div class="log-panel" id="logPanel">
+        > Sẵn sàng...<br>
+    </div>
+
+    <script>
+        // --- LOGIC PARSER & EXECUTION ENGINE ---
+        
+        let rootNode = null;
+        let stepQueue = [];
+        let isRunning = false;
+        let animationSpeed = 800;
+
+        // Cấu trúc Node cho cây
+        class TreeNode {
+            constructor(arg, parent = null) {
+                this.id = Math.random().toString(36).substr(2, 9);
+                this.arg = arg;
+                this.parent = parent;
+                this.children = [];
+                this.result = null;
+                this.isBaseCase = false;
+                this.formula = ""; 
+                this.domElement = null; // Link tới HTML DIV
+            }
+        }
+
+        // Hàm phân tích cú pháp "No-code"
+        // Mục tiêu: Biến chuỗi "n * f(n-1)" thành logic xử lý
+        function parseAndBuildTree(node, config) {
+            const n = node.arg;
+
+            // 1. Kiểm tra Base Case
+            // Sử dụng new Function để đánh giá biểu thức boolean an toàn trong scope cục bộ
+            const checkBase = new Function('n', `return ${config.baseCond};`);
+            
+            if (checkBase(n)) {
+                node.isBaseCase = true;
+                // Tính giá trị base value (có thể là số hoặc biểu thức như 'n')
+                const getBaseVal = new Function('n', `return ${config.baseVal};`);
+                node.result = getBaseVal(n);
+                node.formula = `Base: ${node.result}`;
+                return;
+            }
+
+            // 2. Xử lý Recursive Step
+            // Tìm tất cả các đoạn gọi hàm f(...) trong chuỗi công thức
+            // Regex: f\(([^)]+)\) -> tìm f(biểu_thức)
+            const formulaStr = config.recForm;
+            const regex = /f\(([^)]+)\)/g;
+            let match;
+            
+            // Lưu lại công thức gốc nhưng thay f(...) bằng placeholder để sau này tính toán
+            node.formula = formulaStr; 
+
+            // Tìm các con cần sinh ra
+            while ((match = regex.exec(formulaStr)) !== null) {
+                const argExpr = match[1]; // Lấy nội dung trong ngoặc, ví dụ "n-1"
+                
+                // Tính giá trị tham số mới cho con
+                const calcArg = new Function('n', `return ${argExpr};`);
+                const childArg = calcArg(n);
+
+                // Tạo node con
+                const childNode = new TreeNode(childArg, node);
+                node.children.push(childNode);
+
+                // Đệ quy tiếp tục xây cây
+                parseAndBuildTree(childNode, config);
+            }
+
+            // Lưu ý: Ta chưa tính result của node này ở đây, 
+            // result chỉ được tính khi các con đã có kết quả (trong giai đoạn animation/execution)
+        }
+
+        // --- UI RENDERER ---
+
+        function createTreeHTML(node) {
+            const wrapper = document.createElement('div');
+            wrapper.className = 'node-wrapper';
+            wrapper.id = `wrap-${node.id}`;
+
+            // Node Circle
+            const content = document.createElement('div');
+            content.className = 'node-content';
+            content.id = `node-${node.id}`;
+            content.innerHTML = `
+                <div class="arg-val">f(${node.arg})</div>
+                <div class="ret-val">?</div>
+            `;
+            node.domElement = content;
+            wrapper.appendChild(content);
+
+            // Container for children
+            if (node.children.length > 0) {
+                const childrenContainer = document.createElement('div');
+                childrenContainer.className = 'children-container';
+                childrenContainer.id = `children-${node.id}`;
+                
+                node.children.forEach(child => {
+                    childrenContainer.appendChild(createTreeHTML(child));
+                });
+                wrapper.appendChild(childrenContainer);
+            }
+
+            return wrapper;
+        }
+
+        function drawLines() {
+            // Xóa lines cũ
+            document.querySelectorAll('svg.connector').forEach(e => e.remove());
+
+            // Vẽ line mới nối cha-con
+            const vizArea = document.getElementById('vizArea');
+            const svg = document.createElementNS("http://www.w3.org/2000/svg", "svg");
+            svg.classList.add('connector');
+            
+            // Lấy kích thước toàn bộ vùng vẽ để set SVG size
+            const rect = vizArea.firstChild.getBoundingClientRect(); // Lấy wrapper to nhất
+            // Nhưng ta cần toạ độ tương đối với vizArea
+            // Cách đơn giản: Duyệt cây data và vẽ line giữa các element ID
+
+            function connect(node) {
+                if (!node.children || node.children.length === 0) return;
+
+                const parentEl = document.getElementById(`node-${node.id}`);
+                const parentRect = parentEl.getBoundingClientRect();
+                const containerRect = vizArea.getBoundingClientRect();
+
+                // Toạ độ tâm cha tương đối với vizArea (có tính scroll)
+                const pX = parentRect.left + parentRect.width/2 - containerRect.left + vizArea.scrollLeft;
+                const pY = parentRect.top + parentRect.height - containerRect.top + vizArea.scrollTop;
+
+                node.children.forEach(child => {
+                    const childEl = document.getElementById(`node-${child.id}`);
+                    const childRect = childEl.getBoundingClientRect();
+                    
+                    // Toạ độ tâm đỉnh con
+                    const cX = childRect.left + childRect.width/2 - containerRect.left + vizArea.scrollLeft;
+                    const cY = childRect.top - containerRect.top + vizArea.scrollTop;
+
+                    // Tạo đường dẫn Bezier
+                    const path = document.createElementNS("http://www.w3.org/2000/svg", "path");
+                    path.setAttribute("d", `M ${pX} ${pY} C ${pX} ${pY + 20}, ${cX} ${cY - 20}, ${cX} ${cY}`);
+                    path.classList.add('edge');
+                    path.id = `edge-${node.id}-${child.id}`;
+                    svg.appendChild(path);
+
+                    connect(child);
+                });
+            }
+
+            vizArea.appendChild(svg);
+            // Cập nhật lại kích thước SVG
+            svg.setAttribute("width", vizArea.scrollWidth);
+            svg.setAttribute("height", vizArea.scrollHeight);
+            
+            if(rootNode) connect(rootNode);
+        }
+
+        // --- ANIMATION ENGINE ---
+
+        function log(msg) {
+            const el = document.getElementById('logPanel');
+            el.innerHTML += `> ${msg}<br>`;
+            el.scrollTop = el.scrollHeight;
+        }
+
+        function queueStep(type, node, extra = null) {
+            stepQueue.push({ type, node, extra });
+        }
+
+        // Duyệt cây để tạo kịch bản Animation (Mô phỏng Call Stack thực tế)
+        function generateAnimationSteps(node, config) {
+            // 1. CALL: Đánh dấu đang chạy
+            queueStep('CALL', node);
+
+            if (node.isBaseCase) {
+                // 2. BASE: Tìm thấy đáy
+                queueStep('BASE_HIT', node);
+            } else {
+                // 3. RECURSE: Gọi các con
+                for (let i = 0; i < node.children.length; i++) {
+                    generateAnimationSteps(node.children[i], config);
+                }
+                
+                // 4. CALC: Sau khi các con về hết, tính kết quả của mình
+                queueStep('CALCULATE', node, config.recForm);
+            }
+
+            // 5. RETURN: Trả kết quả lên cha
+            queueStep('RETURN', node);
+        }
+
+        async function processQueue() {
+            if (stepQueue.length === 0) {
+                log("HOÀN THÀNH!");
+                return;
+            }
+
+            const step = stepQueue.shift();
+            const dom = document.getElementById(`node-${step.node.id}`);
+
+            switch (step.type) {
+                case 'CALL':
+                    dom.classList.add('active');
+                    dom.scrollIntoView({behavior: "smooth", block: "center", inline: "center"});
+                    log(`Gọi hàm f(${step.node.arg})...`);
+                    // Highlight edge from parent
+                    if(step.node.parent) {
+                        const edge = document.getElementById(`edge-${step.node.parent.id}-${step.node.id}`);
+                        if(edge) edge.classList.add('active');
+                    }
+                    break;
+
+                case 'BASE_HIT':
+                    dom.classList.remove('active');
+                    dom.classList.add('done');
+                    dom.querySelector('.ret-val').textContent = step.node.result;
+                    log(`🛑 ĐK dừng tại n=${step.node.arg}. Trả về ${step.node.result}`);
+                    break;
+
+                case 'CALCULATE':
+                    // Lúc này các con đã có result. Tính result cho node này.
+                    // Lấy giá trị từ các con
+                    let formula = step.extra; // "n * f(n-1)"
+                    let formulaLog = formula.replace('n', step.node.arg); // "5 * f(4)"
+                    
+                    // Regex thay thế f(...) bằng giá trị thực của con
+                    // Logic này cần khớp với thứ tự con trong mảng children
+                    let childIndex = 0;
+                    // Ta thay thế lần lượt các f(...) bằng result của con tương ứng
+                    const evalString = formula.replace(/f\(([^)]+)\)/g, (match) => {
+                        const val = step.node.children[childIndex].result;
+                        formulaLog = formulaLog.replace(match, val);
+                        childIndex++;
+                        return val;
+                    });
+                    
+                    // Tính toán cuối cùng
+                    const finalCalc = new Function('n', `return ${evalString}`);
+                    step.node.result = finalCalc(step.node.arg);
+                    
+                    log(`🔄 Tính: ${formulaLog} = ${step.node.result}`);
+                    break;
+
+                case 'RETURN':
+                    dom.classList.remove('active');
+                    dom.classList.add('done');
+                    dom.querySelector('.ret-val').textContent = step.node.result;
+                    
+                    // Tắt edge
+                    if(step.node.parent) {
+                        const edge = document.getElementById(`edge-${step.node.parent.id}-${step.node.id}`);
+                        if(edge) {
+                            edge.classList.remove('active');
+                            edge.classList.add('done');
+                        }
+                    }
+                    break;
+            }
+
+            animationSpeed = 2100 - document.getElementById('speedRange').value;
+            setTimeout(processQueue, animationSpeed);
+        }
+
+        // --- MAIN FUNCTIONS ---
+
+        function startVisualization() {
+            const n = parseInt(document.getElementById('inpN').value);
+            const baseCond = document.getElementById('inpBaseCond').value;
+            const baseVal = document.getElementById('inpBaseVal').value;
+            const recForm = document.getElementById('inpRecForm').value;
+
+            // 1. Build Data Tree
+            rootNode = new TreeNode(n);
+            const config = { baseCond, baseVal, recForm };
+            
+            try {
+                parseAndBuildTree(rootNode, config);
+            } catch (e) {
+                alert("Lỗi công thức! Vui lòng kiểm tra lại cú pháp (VD: n <= 1).");
+                console.error(e);
+                return;
+            }
+
+            // 2. Render HTML Structure
+            const vizArea = document.getElementById('vizArea');
+            vizArea.innerHTML = '';
+            vizArea.appendChild(createTreeHTML(rootNode));
+            
+            // Vẽ lines sau khi HTML đã render
+            setTimeout(() => {
+                drawLines();
+                
+                // 3. Generate & Run Animation
+                stepQueue = [];
+                generateAnimationSteps(rootNode, config);
+                document.getElementById('logPanel').innerHTML = '> Bắt đầu chạy...<br>';
+                processQueue();
+            }, 100);
+        }
+
+        function reset() {
+            location.reload();
+        }
+
+        // Re-draw lines on resize
+        window.addEventListener('resize', () => {
+            if(rootNode) drawLines();
+        });
+
+    </script>
+</body>
+</html>

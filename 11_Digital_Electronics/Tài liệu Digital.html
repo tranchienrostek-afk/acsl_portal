@@ -1,0 +1,287 @@
+<!DOCTYPE html>
+<html lang="vi">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Tài liệu Digital Electronics - ACSL</title>
+    <link
+        href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;800&family=JetBrains+Mono:wght@400;700&display=swap"
+        rel="stylesheet">
+    <style>
+        :root {
+            --bg: #0f172a;
+            --card: rgba(30, 41, 59, 0.9);
+            --accent: #f97316;
+            --text: #f1f5f9;
+            --dim: #94a3b8;
+        }
+
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Inter', sans-serif;
+            background: var(--bg);
+            color: var(--text);
+            padding: 30px 15px;
+            line-height: 1.7;
+        }
+
+        .container {
+            max-width: 900px;
+            margin: 0 auto;
+        }
+
+        header {
+            text-align: center;
+            margin-bottom: 40px;
+            border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+            padding-bottom: 20px;
+        }
+
+        h1 {
+            font-size: 2rem;
+            background: linear-gradient(to right, #f97316, #ef4444);
+            -webkit-background-clip: text;
+            background-clip: text;
+            -webkit-text-fill-color: transparent;
+        }
+
+        h2 {
+            color: var(--accent);
+            margin: 30px 0 15px;
+            font-size: 1.3rem;
+        }
+
+        .card {
+            background: var(--card);
+            border-radius: 16px;
+            padding: 25px;
+            margin-bottom: 20px;
+        }
+
+        .table {
+            width: 100%;
+            border-collapse: collapse;
+            margin: 15px 0;
+        }
+
+        .table th,
+        .table td {
+            padding: 12px;
+            text-align: center;
+            border: 1px solid rgba(255, 255, 255, 0.1);
+        }
+
+        .table th {
+            background: rgba(249, 115, 22, 0.2);
+            color: var(--accent);
+        }
+
+        .tip {
+            background: rgba(59, 130, 246, 0.1);
+            padding: 15px;
+            border-radius: 10px;
+            border-left: 4px solid #3b82f6;
+            margin: 15px 0;
+        }
+
+        .code-block {
+            background: #000;
+            padding: 15px;
+            border-radius: 10px;
+            margin: 15px 0;
+            font-family: 'JetBrains Mono';
+            border-left: 4px solid var(--accent);
+        }
+
+        .nav {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 10px;
+            margin-bottom: 30px;
+        }
+
+        .nav a {
+            padding: 8px 16px;
+            background: rgba(255, 255, 255, 0.05);
+            border-radius: 8px;
+            color: var(--text);
+            text-decoration: none;
+        }
+
+        .nav a:hover {
+            background: var(--accent);
+            color: #000;
+        }
+    </style>
+</head>
+
+<body>
+    <div class="container">
+        <header>
+            <h1>📘 Tài liệu Digital Electronics - ACSL</h1>
+            <p style="color: var(--dim);">Mạch số và cổng logic cho kỳ thi ACSL</p>
+        </header>
+
+        <nav class="nav">
+            <a href="#gates">Cổng logic</a>
+            <a href="#truth">Bảng chân lý</a>
+            <a href="#boolean">Boolean Algebra</a>
+            <a href="#tips">Mẹo giải</a>
+        </nav>
+
+        <section id="gates" class="card">
+            <h2>🔌 Các cổng logic cơ bản</h2>
+            <table class="table">
+                <tr>
+                    <th>Cổng</th>
+                    <th>Ký hiệu</th>
+                    <th>Hàm Boolean</th>
+                    <th>Mô tả</th>
+                </tr>
+                <tr>
+                    <td>AND</td>
+                    <td>A · B</td>
+                    <td>AB</td>
+                    <td>Output = 1 khi cả A VÀ B đều = 1</td>
+                </tr>
+                <tr>
+                    <td>OR</td>
+                    <td>A + B</td>
+                    <td>A + B</td>
+                    <td>Output = 1 khi A HOẶC B = 1</td>
+                </tr>
+                <tr>
+                    <td>NOT</td>
+                    <td>Ā hoặc ¬A</td>
+                    <td>¬A</td>
+                    <td>Đảo ngược input</td>
+                </tr>
+                <tr>
+                    <td>NAND</td>
+                    <td>(AB)̄</td>
+                    <td>¬(AB)</td>
+                    <td>NOT của AND</td>
+                </tr>
+                <tr>
+                    <td>NOR</td>
+                    <td>(A+B)̄</td>
+                    <td>¬(A+B)</td>
+                    <td>NOT của OR</td>
+                </tr>
+                <tr>
+                    <td>XOR</td>
+                    <td>A ⊕ B</td>
+                    <td>A'B + AB'</td>
+                    <td>Output = 1 khi A ≠ B</td>
+                </tr>
+                <tr>
+                    <td>XNOR</td>
+                    <td>A ⊙ B</td>
+                    <td>AB + A'B'</td>
+                    <td>Output = 1 khi A = B</td>
+                </tr>
+            </table>
+        </section>
+
+        <section id="truth" class="card">
+            <h2>📊 Bảng chân lý tổng hợp</h2>
+            <table class="table">
+                <tr>
+                    <th>A</th>
+                    <th>B</th>
+                    <th>AND</th>
+                    <th>OR</th>
+                    <th>NAND</th>
+                    <th>NOR</th>
+                    <th>XOR</th>
+                    <th>XNOR</th>
+                </tr>
+                <tr>
+                    <td>0</td>
+                    <td>0</td>
+                    <td>0</td>
+                    <td>0</td>
+                    <td>1</td>
+                    <td>1</td>
+                    <td>0</td>
+                    <td>1</td>
+                </tr>
+                <tr>
+                    <td>0</td>
+                    <td>1</td>
+                    <td>0</td>
+                    <td>1</td>
+                    <td>1</td>
+                    <td>0</td>
+                    <td>1</td>
+                    <td>0</td>
+                </tr>
+                <tr>
+                    <td>1</td>
+                    <td>0</td>
+                    <td>0</td>
+                    <td>1</td>
+                    <td>1</td>
+                    <td>0</td>
+                    <td>1</td>
+                    <td>0</td>
+                </tr>
+                <tr>
+                    <td>1</td>
+                    <td>1</td>
+                    <td>1</td>
+                    <td>1</td>
+                    <td>0</td>
+                    <td>0</td>
+                    <td>0</td>
+                    <td>1</td>
+                </tr>
+            </table>
+        </section>
+
+        <section id="boolean" class="card">
+            <h2>📐 Liên hệ với Boolean Algebra</h2>
+            <p>Mỗi mạch số có thể biểu diễn bằng biểu thức Boolean và ngược lại.</p>
+            <div class="code-block">
+                Mạch: A AND B → output qua NOT<br>
+                Boolean: F = ¬(A · B) = NAND(A, B)
+            </div>
+            <div class="tip">
+                <strong>💡 Universal Gates:</strong><br>
+                NAND và NOR là "cổng vạn năng" - có thể tạo mọi cổng khác chỉ từ NAND hoặc NOR:
+                <ul style="padding-left: 20px; margin-top: 10px;">
+                    <li>NOT A = NAND(A, A)</li>
+                    <li>AND = NAND → NOT</li>
+                    <li>OR = NOT → NAND</li>
+                </ul>
+            </div>
+        </section>
+
+        <section id="tips" class="card">
+            <h2>💡 Mẹo giải đề ACSL</h2>
+            <ol style="padding-left: 20px; line-height: 2;">
+                <li>Vẽ lại mạch thành biểu thức Boolean</li>
+                <li>Đơn giản hóa bằng các đẳng thức (De Morgan, phân phối...)</li>
+                <li>Thử từng giá trị input nếu cần</li>
+                <li>Kiểm tra với bảng chân lý</li>
+            </ol>
+            <div class="tip">
+                <strong>🔧 Công cụ online:</strong> <a href="http://www.cburch.com/logisim/index.html"
+                    style="color: var(--accent);">Logisim</a> - phần mềm miễn phí để vẽ và mô phỏng mạch.
+            </div>
+        </section>
+
+        <footer style="text-align: center; margin-top: 40px; color: var(--dim);">
+            <p>Nguồn: <a href="http://www.categories.acsl.org/wiki/index.php?title=Digital_Electronics"
+                    style="color: var(--accent);">ACSL - Digital Electronics</a></p>
+        </footer>
+    </div>
+</body>
+
+</html>

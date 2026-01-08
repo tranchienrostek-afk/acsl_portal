@@ -1,0 +1,509 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Bit String Master Studio - Ultimate Edition</title>
+    <style>
+        :root {
+            --bg: #0b0c15;
+            --panel: #151621;
+            --accent: #00f2ff; /* Cyan Neon */
+            --accent-2: #ff0055; /* Pink Neon */
+            --text: #e0e6ed;
+            --bit-0: #334155;
+            --bit-1: #00f2ff;
+            --bit-text-0: #94a3b8;
+            --bit-text-1: #000;
+            --op-bg: #f59e0b;
+        }
+
+        * { box-sizing: border-box; font-family: 'Consolas', 'Monaco', monospace; }
+
+        body {
+            background-color: var(--bg);
+            color: var(--text);
+            margin: 0;
+            display: flex;
+            height: 100vh;
+            overflow: hidden;
+        }
+
+        /* SIDEBAR - CONFIG */
+        .sidebar {
+            width: 350px;
+            background: var(--panel);
+            border-right: 1px solid #333;
+            padding: 20px;
+            display: flex;
+            flex-direction: column;
+            gap: 20px;
+            overflow-y: auto;
+            z-index: 10;
+        }
+
+        h1 {
+            font-size: 1.5rem;
+            color: var(--accent);
+            text-transform: uppercase;
+            letter-spacing: 2px;
+            margin: 0;
+            text-shadow: 0 0 10px rgba(0, 242, 255, 0.5);
+        }
+
+        .section-title { font-size: 0.9rem; color: #64748b; text-transform: uppercase; margin-bottom: 10px; border-bottom: 1px solid #333; padding-bottom: 5px; }
+
+        .var-row {
+            display: flex;
+            gap: 10px;
+            margin-bottom: 10px;
+            align-items: center;
+        }
+
+        input {
+            background: #1e293b;
+            border: 1px solid #334155;
+            color: var(--accent);
+            padding: 8px;
+            border-radius: 4px;
+            outline: none;
+            font-size: 1rem;
+        }
+        
+        input:focus { border-color: var(--accent); box-shadow: 0 0 5px var(--accent); }
+
+        .btn {
+            background: var(--accent);
+            color: #000;
+            border: none;
+            padding: 10px;
+            font-weight: bold;
+            cursor: pointer;
+            border-radius: 4px;
+            transition: 0.2s;
+            text-transform: uppercase;
+        }
+
+        .btn:hover { filter: brightness(1.2); transform: translateY(-1px); }
+        .btn.secondary { background: #334155; color: white; }
+        .btn.danger { background: var(--accent-2); color: white; }
+
+        /* MAIN STAGE */
+        .stage {
+            flex: 1;
+            display: flex;
+            flex-direction: column;
+            padding: 20px;
+            background-image: radial-gradient(#1e293b 1px, transparent 1px);
+            background-size: 20px 20px;
+            position: relative;
+        }
+
+        .expression-bar {
+            background: rgba(0,0,0,0.5);
+            padding: 20px;
+            border-radius: 12px;
+            border: 1px solid #333;
+            margin-bottom: 20px;
+            display: flex;
+            gap: 10px;
+        }
+        
+        #exprInput { flex: 1; font-size: 1.2rem; letter-spacing: 1px; }
+
+        /* VISUALIZATION AREA */
+        .viz-container {
+            flex: 1;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: flex-start;
+            overflow-y: auto;
+            padding-top: 20px;
+            gap: 40px; 
+        }
+
+        /* LOGIC BLOCKS */
+        .logic-step {
+            background: rgba(20, 20, 30, 0.9);
+            border: 1px solid #444;
+            border-radius: 10px;
+            padding: 20px;
+            min-width: 400px;
+            position: relative;
+            animation: slideIn 0.5s ease;
+            box-shadow: 0 10px 30px rgba(0,0,0,0.5);
+        }
+
+        .step-header {
+            position: absolute;
+            top: -12px;
+            left: 20px;
+            background: var(--op-bg);
+            color: white;
+            padding: 2px 10px;
+            border-radius: 4px;
+            font-size: 0.8rem;
+            font-weight: bold;
+        }
+
+        .bit-row {
+            display: flex;
+            gap: 5px;
+            justify-content: center;
+            margin: 5px 0;
+        }
+
+        .bit {
+            width: 40px;
+            height: 40px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            background: var(--bit-0);
+            color: var(--bit-text-0);
+            font-weight: bold;
+            font-size: 1.2rem;
+            border-radius: 6px;
+            transition: all 0.3s;
+            position: relative;
+        }
+
+        .bit.one {
+            background: var(--bit-1);
+            color: var(--bit-text-1);
+            box-shadow: 0 0 10px var(--bit-1);
+        }
+
+        .bit.ghost { opacity: 0.3; border: 1px dashed white; background: transparent; }
+        
+        .operator-sign {
+            text-align: center;
+            font-size: 1.5rem;
+            color: #64748b;
+            margin: 5px 0;
+        }
+
+        .result-divider {
+            height: 2px;
+            background: #444;
+            margin: 10px 0;
+            width: 100%;
+        }
+
+        /* ANIMATIONS */
+        @keyframes slideIn { from { opacity: 0; transform: translateY(20px); } to { opacity: 1; transform: translateY(0); } }
+        @keyframes pop { 0% { transform: scale(1); } 50% { transform: scale(1.2); } 100% { transform: scale(1); } }
+        
+        .highlight-col { border: 2px solid var(--accent-2); transform: scale(1.1); z-index: 10; }
+
+        /* HELPERS */
+        .tooltip { font-size: 0.8rem; color: #666; margin-top: 5px; }
+        .error-msg { color: var(--accent-2); font-weight: bold; margin-top: 10px; display: none; }
+
+    </style>
+</head>
+<body>
+
+    <div class="sidebar">
+        <h1>Bit Master <span style="font-size:0.5em; vertical-align:top">v1.0</span></h1>
+        
+        <div>
+            <div class="section-title">Biến (Variables)</div>
+            <div id="varsContainer">
+                </div>
+            <button class="btn secondary" onclick="addVar()" style="width:100%; margin-top:10px">+ Thêm Biến</button>
+        </div>
+
+        <div>
+            <div class="section-title">Cheat Sheet</div>
+            <div class="tooltip">
+                <b>Operators:</b><br>
+                NOT A<br>
+                A AND B<br>
+                A OR B<br>
+                A XOR B<br>
+                LSHIFT-n A (VD: LSHIFT-2 A)<br>
+                RSHIFT-n A<br>
+                LCIRC-n A<br>
+                RCIRC-n A<br>
+                ( ) Parentheses supported
+            </div>
+        </div>
+    </div>
+
+    <div class="stage">
+        <div class="expression-bar">
+            <input type="text" id="exprInput" value="(A AND B) OR (LSHIFT-2 C)" placeholder="Nhập biểu thức (VD: A AND B)">
+            <button class="btn" onclick="runSimulation()">CHẠY XỬ LÝ</button>
+        </div>
+        <div id="errorDisplay" class="error-msg"></div>
+
+        <div class="viz-container" id="vizArea">
+            <div style="text-align:center; color:#555; margin-top:50px;">
+                <h3>SẴN SÀNG XỬ LÝ</h3>
+                <p>Nhập biểu thức và nhấn CHẠY để xem phép màu.</p>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // --- 1. CORE LOGIC ENGINE ---
+
+        // Khởi tạo biến mặc định
+        let variables = [
+            { name: 'A', val: '10110' },
+            { name: 'B', val: '01100' },
+            { name: 'C', val: '11111' }
+        ];
+
+        function renderVars() {
+            const container = document.getElementById('varsContainer');
+            container.innerHTML = '';
+            variables.forEach((v, idx) => {
+                const div = document.createElement('div');
+                div.className = 'var-row';
+                div.innerHTML = `
+                    <input type="text" value="${v.name}" style="width:40px; text-align:center; font-weight:bold" onchange="updateVarName(${idx}, this.value)">
+                    <input type="text" value="${v.val}" style="flex:1; font-family:monospace" onchange="updateVarVal(${idx}, this.value)" placeholder="0101...">
+                    <button class="btn danger" style="padding:5px 10px" onclick="removeVar(${idx})">×</button>
+                `;
+                container.appendChild(div);
+            });
+        }
+
+        function addVar() {
+            const nextChar = String.fromCharCode(65 + variables.length);
+            variables.push({ name: nextChar, val: '00000' });
+            renderVars();
+        }
+
+        function removeVar(idx) {
+            variables.splice(idx, 1);
+            renderVars();
+        }
+
+        function updateVarName(idx, val) { variables[idx].name = val.toUpperCase(); }
+        function updateVarVal(idx, val) { 
+            // Chỉ giữ lại 0 và 1
+            variables[idx].val = val.replace(/[^01]/g, ''); 
+            renderVars(); // Re-render to show cleaned value
+        }
+
+        // --- 2. PARSER & EVALUATOR (Shunting-yard Algorithm & RPN Evaluator) ---
+
+        const OPERATORS = {
+            'NOT': { prec: 4, assoc: 'R', type: 'unary' },
+            'LSHIFT': { prec: 3, assoc: 'R', type: 'unary_arg' }, // Special: takes N argument
+            'RSHIFT': { prec: 3, assoc: 'R', type: 'unary_arg' },
+            'LCIRC': { prec: 3, assoc: 'R', type: 'unary_arg' },
+            'RCIRC': { prec: 3, assoc: 'R', type: 'unary_arg' },
+            'AND': { prec: 2, assoc: 'L', type: 'binary' },
+            'XOR': { prec: 1, assoc: 'L', type: 'binary' },
+            'OR': { prec: 0, assoc: 'L', type: 'binary' }
+        };
+
+        function tokenize(expr) {
+            // Chuẩn hóa: thêm khoảng trắng quanh ngoặc, viết hoa
+            expr = expr.replace(/\(/g, ' ( ').replace(/\)/g, ' ) ').toUpperCase();
+            // Xử lý các toán tử có gạch nối như LSHIFT-2
+            // Regex tìm: LSHIFT-2, RCIRC-1, v.v.
+            const tokens = expr.split(/\s+/).filter(t => t.length > 0);
+            
+            const result = [];
+            tokens.forEach(t => {
+                if (t.match(/^(LSHIFT|RSHIFT|LCIRC|RCIRC)-(\d+)$/)) {
+                    // Tách LSHIFT-2 thành ["LSHIFT", "2"] nhưng đánh dấu đặc biệt
+                    const parts = t.split('-');
+                    result.push({ type: 'OP_SHIFT', op: parts[0], arg: parseInt(parts[1]) });
+                } else if (OPERATORS[t]) {
+                    result.push({ type: 'OP', val: t });
+                } else if (t === '(' || t === ')') {
+                    result.push({ type: 'PAREN', val: t });
+                } else {
+                    // Biến hoặc chuỗi bit trực tiếp
+                    result.push({ type: 'VAL', val: t });
+                }
+            });
+            return result;
+        }
+
+        function parseToRPN(tokens) {
+            const outputQueue = [];
+            const opStack = [];
+
+            tokens.forEach(token => {
+                if (token.type === 'VAL') {
+                    outputQueue.push(token);
+                } else if (token.type === 'OP_SHIFT') {
+                    // Shift operators are unary prefix high precedence
+                    opStack.push(token);
+                } else if (token.type === 'OP') {
+                    const o1 = token.val;
+                    let o2 = opStack.length ? opStack[opStack.length - 1] : null;
+                    
+                    while (o2 && (o2.type === 'OP' || o2.type === 'OP_SHIFT') &&
+                           ((OPERATORS[o1].assoc === 'L' && OPERATORS[o1].prec <= (o2.type==='OP'?OPERATORS[o2.val].prec : 3)) ||
+                            (OPERATORS[o1].assoc === 'R' && OPERATORS[o1].prec < (o2.type==='OP'?OPERATORS[o2.val].prec : 3)))) {
+                        outputQueue.push(opStack.pop());
+                        o2 = opStack.length ? opStack[opStack.length - 1] : null;
+                    }
+                    opStack.push(token);
+                } else if (token.val === '(') {
+                    opStack.push(token);
+                } else if (token.val === ')') {
+                    while (opStack.length && opStack[opStack.length - 1].val !== '(') {
+                        outputQueue.push(opStack.pop());
+                    }
+                    opStack.pop(); // Pop '('
+                }
+            });
+
+            while (opStack.length) {
+                outputQueue.push(opStack.pop());
+            }
+            return outputQueue;
+        }
+
+        // --- 3. VISUALIZATION ENGINE ---
+
+        // Hàm hỗ trợ tính toán bit
+        const BitOps = {
+            AND: (a, b) => a.split('').map((c, i) => (c === '1' && b[i] === '1') ? '1' : '0').join(''),
+            OR: (a, b) => a.split('').map((c, i) => (c === '1' || b[i] === '1') ? '1' : '0').join(''),
+            XOR: (a, b) => a.split('').map((c, i) => c !== b[i] ? '1' : '0').join(''),
+            NOT: (a) => a.split('').map(c => c === '1' ? '0' : '1').join(''),
+            LSHIFT: (a, n) => (a.substring(n) + '0'.repeat(n)).substring(0, a.length), // Giữ độ dài, thêm 0
+            RSHIFT: (a, n) => ('0'.repeat(n) + a.substring(0, a.length - n)),
+            LCIRC: (a, n) => {
+                const shift = n % a.length;
+                return a.substring(shift) + a.substring(0, shift);
+            },
+            RCIRC: (a, n) => {
+                const shift = n % a.length;
+                return a.substring(a.length - shift) + a.substring(0, a.length - shift);
+            }
+        };
+
+        // Hàm chuẩn hóa độ dài 2 chuỗi bit (thêm 0 vào đầu)
+        function padBits(a, b) {
+            const len = Math.max(a.length, b.length);
+            return [a.padStart(len, '0'), b.padStart(len, '0')];
+        }
+
+        // Visual Element Generator
+        function createBitRowHTML(bits, label = '') {
+            let html = `<div style="display:flex; align-items:center;"><span style="width:30px; margin-right:10px; font-weight:bold; color:#888">${label}</span><div class="bit-row">`;
+            for (let char of bits) {
+                html += `<div class="bit ${char === '1' ? 'one' : ''}">${char}</div>`;
+            }
+            html += `</div></div>`;
+            return html;
+        }
+
+        function visualizeStep(opType, opName, inputs, result) {
+            const div = document.createElement('div');
+            div.className = 'logic-step';
+            
+            let content = `<div class="step-header">${opName}</div>`;
+
+            if (inputs.length === 2) {
+                // Binary OP (AND, OR, XOR)
+                content += createBitRowHTML(inputs[0], 'A');
+                content += `<div class="operator-sign">${opName}</div>`;
+                content += createBitRowHTML(inputs[1], 'B');
+                content += `<div class="result-divider"></div>`;
+                content += createBitRowHTML(result, '=');
+            } else if (opType === 'NOT') {
+                content += createBitRowHTML(inputs[0], 'In');
+                content += `<div class="operator-sign">⬇️ NOT ⬇️</div>`;
+                content += `<div class="result-divider"></div>`;
+                content += createBitRowHTML(result, '=');
+            } else {
+                // Shift/Circ
+                content += createBitRowHTML(inputs[0], 'In');
+                content += `<div class="operator-sign">⬅️ ${opName} ➡️</div>`;
+                content += `<div class="result-divider"></div>`;
+                content += createBitRowHTML(result, '=');
+            }
+
+            div.innerHTML = content;
+            document.getElementById('vizArea').appendChild(div);
+            div.scrollIntoView({ behavior: 'smooth', block: 'end' });
+        }
+
+        async function runSimulation() {
+            const expr = document.getElementById('exprInput').value;
+            const errorDisplay = document.getElementById('errorDisplay');
+            const vizArea = document.getElementById('vizArea');
+            
+            errorDisplay.style.display = 'none';
+            vizArea.innerHTML = ''; // Clear old run
+
+            if(!expr.trim()) return;
+
+            try {
+                // 1. Tokenize
+                const tokens = tokenize(expr);
+                // 2. Parse to RPN
+                const queue = parseToRPN(tokens);
+                // 3. Execute
+                const stack = [];
+
+                // Resolve Variable values
+                const resolveVal = (val) => {
+                    const v = variables.find(v => v.name === val);
+                    return v ? v.val : (val.match(/^[01]+$/) ? val : '0');
+                };
+
+                for (let token of queue) {
+                    await new Promise(r => setTimeout(r, 600)); // Delay for animation effect
+
+                    if (token.type === 'VAL') {
+                        stack.push(resolveVal(token.val));
+                    } else if (token.type === 'OP_SHIFT') {
+                        // Unary with Arg (LSHIFT-2)
+                        const a = stack.pop();
+                        const res = BitOps[token.op](a, token.arg);
+                        visualizeStep('SHIFT', `${token.op}-${token.arg}`, [a], res);
+                        stack.push(res);
+                    } else if (token.type === 'OP') {
+                        if (token.val === 'NOT') {
+                            const a = stack.pop();
+                            const res = BitOps.NOT(a);
+                            visualizeStep('NOT', 'NOT', [a], res);
+                            stack.push(res);
+                        } else {
+                            // Binary Ops
+                            const b = stack.pop();
+                            const a = stack.pop();
+                            const [padA, padB] = padBits(a, b);
+                            const res = BitOps[token.val](padA, padB);
+                            visualizeStep('BINARY', token.val, [padA, padB], res);
+                            stack.push(res);
+                        }
+                    }
+                }
+
+                if (stack.length === 1) {
+                    const finalRes = stack.pop();
+                    const finalDiv = document.createElement('div');
+                    finalDiv.style = "margin-top:20px; padding:20px; border: 2px solid #00f2ff; background:#111; border-radius:10px; text-align:center";
+                    finalDiv.innerHTML = `<h2 style="color:#00f2ff">KẾT QUẢ CUỐI CÙNG</h2>${createBitRowHTML(finalRes, '')}`;
+                    vizArea.appendChild(finalDiv);
+                    finalDiv.scrollIntoView();
+                }
+
+            } catch (e) {
+                console.error(e);
+                errorDisplay.textContent = "Lỗi cú pháp! Kiểm tra lại dấu ngoặc hoặc tên biến.";
+                errorDisplay.style.display = 'block';
+            }
+        }
+
+        // Initialize
+        renderVars();
+
+    </script>
+</body>
+</html>

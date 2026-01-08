@@ -1,0 +1,338 @@
+<!DOCTYPE html>
+<html lang="vi">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Mô phỏng ACSL - Câu 4: Đếm Chẵn/Lẻ</title>
+    <link
+        href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;800&family=JetBrains+Mono:wght@400;700&display=swap"
+        rel="stylesheet">
+    <style>
+        :root {
+            --bg: #030712;
+            --card-bg: rgba(17, 24, 39, 0.8);
+            --accent: #ec4899;
+            --text: #f9fafb;
+            --text-dim: #9ca3af;
+            --even: #3b82f6;
+            --odd: #ef4444;
+        }
+
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Inter', sans-serif;
+            background: var(--bg);
+            color: var(--text);
+            padding: 40px 20px;
+        }
+
+        .container {
+            max-width: 900px;
+            margin: 0 auto;
+        }
+
+        header {
+            text-align: center;
+            margin-bottom: 40px;
+        }
+
+        h1 {
+            font-size: 2.2rem;
+            font-weight: 800;
+            background: linear-gradient(to right, #ec4899, #8b5cf6);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+        }
+
+        .card {
+            background: var(--card-bg);
+            backdrop-filter: blur(12px);
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            border-radius: 24px;
+            padding: 30px;
+            margin-bottom: 30px;
+        }
+
+        .code-block {
+            font-family: 'JetBrains Mono', monospace;
+            background: #000;
+            padding: 15px;
+            border-radius: 12px;
+            border-left: 4px solid var(--accent);
+            margin-bottom: 20px;
+            font-size: 0.9rem;
+        }
+
+        .number-grid {
+            display: grid;
+            grid-template-columns: repeat(10, 1fr);
+            gap: 8px;
+            margin: 20px 0;
+        }
+
+        .num-cell {
+            aspect-ratio: 1;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            border-radius: 8px;
+            font-weight: 600;
+            font-size: 0.9rem;
+            background: rgba(255, 255, 255, 0.05);
+            border: 2px solid transparent;
+            transition: 0.3s;
+        }
+
+        .num-cell.even {
+            background: rgba(59, 130, 246, 0.2);
+            border-color: var(--even);
+            color: var(--even);
+        }
+
+        .num-cell.odd {
+            background: rgba(239, 68, 68, 0.2);
+            border-color: var(--odd);
+            color: var(--odd);
+        }
+
+        .num-cell.active {
+            transform: scale(1.2);
+            box-shadow: 0 0 15px currentColor;
+            z-index: 10;
+        }
+
+        .stats {
+            display: flex;
+            gap: 30px;
+            justify-content: center;
+            margin: 30px 0;
+        }
+
+        .stat-card {
+            flex: 1;
+            max-width: 200px;
+            padding: 25px;
+            border-radius: 16px;
+            text-align: center;
+        }
+
+        .stat-card.even {
+            background: rgba(59, 130, 246, 0.1);
+            border: 2px solid var(--even);
+        }
+
+        .stat-card.odd {
+            background: rgba(239, 68, 68, 0.1);
+            border: 2px solid var(--odd);
+        }
+
+        .stat-val {
+            font-size: 3rem;
+            font-weight: 800;
+        }
+
+        .stat-card.even .stat-val {
+            color: var(--even);
+        }
+
+        .stat-card.odd .stat-val {
+            color: var(--odd);
+        }
+
+        .stat-label {
+            font-size: 0.9rem;
+            color: var(--text-dim);
+            margin-top: 5px;
+        }
+
+        .step-info {
+            background: rgba(236, 72, 153, 0.1);
+            padding: 15px;
+            border-radius: 12px;
+            border: 1px dashed var(--accent);
+            text-align: center;
+            font-size: 1.1rem;
+        }
+
+        .controls {
+            display: flex;
+            gap: 15px;
+            justify-content: center;
+            margin-top: 25px;
+        }
+
+        button {
+            padding: 12px 24px;
+            border-radius: 12px;
+            border: none;
+            background: var(--accent);
+            color: white;
+            font-weight: 600;
+            cursor: pointer;
+            transition: 0.2s;
+        }
+
+        button:hover {
+            transform: translateY(-2px);
+        }
+
+        button:disabled {
+            opacity: 0.5;
+        }
+
+        .speed-control {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            justify-content: center;
+            margin-top: 15px;
+        }
+
+        .speed-control input {
+            width: 150px;
+        }
+    </style>
+</head>
+
+<body>
+    <div class="container">
+        <header>
+            <h1>Mô phỏng ACSL: Câu 4</h1>
+            <p>Đếm số chẵn và số lẻ từ 1 đến 50</p>
+        </header>
+
+        <div class="card">
+            <div class="code-block">
+                C = 0; S = 0<br>
+                FOR I = 1 TO 50<br>
+                &nbsp;&nbsp;IF I / 2 = INT(I / 2) THEN C = C + 1<br>
+                &nbsp;&nbsp;ELSE S = S + 1<br>
+                NEXT I<br>
+                PRINT C, S
+            </div>
+
+            <div class="number-grid" id="grid"></div>
+
+            <div class="stats">
+                <div class="stat-card even">
+                    <div class="stat-val" id="val-c">0</div>
+                    <div class="stat-label">C (Số chẵn)</div>
+                </div>
+                <div class="stat-card odd">
+                    <div class="stat-val" id="val-s">0</div>
+                    <div class="stat-label">S (Số lẻ)</div>
+                </div>
+            </div>
+
+            <div class="step-info" id="status">Đang xử lý: i = <span id="current-i">-</span></div>
+
+            <div class="controls">
+                <button id="btn-auto">▶ Chạy tự động</button>
+                <button id="btn-step">Từng bước</button>
+                <button id="btn-reset" style="background: #4b5563;">Reset</button>
+            </div>
+            <div class="speed-control">
+                <label>Tốc độ:</label>
+                <input type="range" id="speed" min="20" max="500" value="100">
+                <span id="speed-val">100ms</span>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        let C = 0, S = 0, i = 0;
+        let running = false;
+        let interval = null;
+
+        const grid = document.getElementById('grid');
+        const valC = document.getElementById('val-c');
+        const valS = document.getElementById('val-s');
+        const currentI = document.getElementById('current-i');
+        const btnAuto = document.getElementById('btn-auto');
+        const btnStep = document.getElementById('btn-step');
+        const btnReset = document.getElementById('btn-reset');
+        const speedSlider = document.getElementById('speed');
+        const speedVal = document.getElementById('speed-val');
+
+        function init() {
+            C = 0; S = 0; i = 0;
+            running = false;
+            if (interval) clearInterval(interval);
+            interval = null;
+            grid.innerHTML = '';
+            for (let n = 1; n <= 50; n++) {
+                const cell = document.createElement('div');
+                cell.className = 'num-cell';
+                cell.innerText = n;
+                cell.id = `cell-${n}`;
+                grid.appendChild(cell);
+            }
+            valC.innerText = '0';
+            valS.innerText = '0';
+            currentI.innerText = '-';
+            btnAuto.innerText = '▶ Chạy tự động';
+            btnStep.disabled = false;
+        }
+
+        function step() {
+            if (i >= 50) {
+                if (interval) clearInterval(interval);
+                running = false;
+                btnAuto.innerText = '✓ Hoàn thành';
+                btnStep.disabled = true;
+                return;
+            }
+            i++;
+            currentI.innerText = i;
+            const cell = document.getElementById(`cell-${i}`);
+
+            // Remove active from all
+            document.querySelectorAll('.num-cell').forEach(c => c.classList.remove('active'));
+            cell.classList.add('active');
+
+            if (i % 2 === 0) {
+                C++;
+                cell.classList.add('even');
+                valC.innerText = C;
+            } else {
+                S++;
+                cell.classList.add('odd');
+                valS.innerText = S;
+            }
+        }
+
+        btnStep.onclick = step;
+
+        btnAuto.onclick = () => {
+            if (running) {
+                clearInterval(interval);
+                running = false;
+                btnAuto.innerText = '▶ Chạy tự động';
+            } else {
+                running = true;
+                btnAuto.innerText = '⏸ Dừng';
+                interval = setInterval(step, parseInt(speedSlider.value));
+            }
+        };
+
+        btnReset.onclick = init;
+
+        speedSlider.oninput = () => {
+            speedVal.innerText = speedSlider.value + 'ms';
+            if (running) {
+                clearInterval(interval);
+                interval = setInterval(step, parseInt(speedSlider.value));
+            }
+        };
+
+        init();
+    </script>
+</body>
+
+</html>

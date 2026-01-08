@@ -1,0 +1,420 @@
+<!DOCTYPE html>
+<html lang="vi">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Mô phỏng Boolean Algebra - ACSL</title>
+    <link
+        href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;800&family=JetBrains+Mono:wght@400;700&display=swap"
+        rel="stylesheet">
+    <style>
+        :root {
+            --bg: #0a0a0f;
+            --card: rgba(20, 20, 30, 0.9);
+            --accent: #f59e0b;
+            --text: #f1f5f9;
+            --dim: #94a3b8;
+            --true: #22c55e;
+            --false: #ef4444;
+        }
+
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Inter', sans-serif;
+            background: var(--bg);
+            color: var(--text);
+            padding: 30px 15px;
+        }
+
+        .container {
+            max-width: 1000px;
+            margin: 0 auto;
+        }
+
+        header {
+            text-align: center;
+            margin-bottom: 30px;
+        }
+
+        h1 {
+            font-size: 2rem;
+            font-weight: 800;
+            background: linear-gradient(to right, #f59e0b, #ef4444);
+            -webkit-background-clip: text;
+            background-clip: text;
+            -webkit-text-fill-color: transparent;
+        }
+
+        h2 {
+            color: var(--accent);
+            margin: 20px 0 15px;
+            font-size: 1.2rem;
+        }
+
+        .card {
+            background: var(--card);
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            border-radius: 16px;
+            padding: 20px;
+            margin-bottom: 20px;
+        }
+
+        .grid {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 20px;
+        }
+
+        @media (max-width: 700px) {
+            .grid {
+                grid-template-columns: 1fr;
+            }
+        }
+
+        .input-row {
+            display: flex;
+            gap: 15px;
+            align-items: center;
+            margin-bottom: 15px;
+            flex-wrap: wrap;
+        }
+
+        .var-toggle {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            background: rgba(255, 255, 255, 0.05);
+            padding: 10px 15px;
+            border-radius: 10px;
+        }
+
+        .var-toggle label {
+            font-weight: 600;
+        }
+
+        .toggle {
+            width: 50px;
+            height: 26px;
+            background: var(--false);
+            border-radius: 13px;
+            cursor: pointer;
+            position: relative;
+            transition: 0.3s;
+        }
+
+        .toggle.on {
+            background: var(--true);
+        }
+
+        .toggle::after {
+            content: '';
+            position: absolute;
+            top: 3px;
+            left: 3px;
+            width: 20px;
+            height: 20px;
+            background: white;
+            border-radius: 50%;
+            transition: 0.3s;
+        }
+
+        .toggle.on::after {
+            left: 27px;
+        }
+
+        .val {
+            font-family: 'JetBrains Mono', monospace;
+            font-weight: 700;
+            font-size: 1.1rem;
+        }
+
+        .val.true {
+            color: var(--true);
+        }
+
+        .val.false {
+            color: var(--false);
+        }
+
+        .truth-table {
+            width: 100%;
+            border-collapse: collapse;
+            font-size: 0.9rem;
+        }
+
+        .truth-table th,
+        .truth-table td {
+            padding: 10px;
+            text-align: center;
+            border: 1px solid rgba(255, 255, 255, 0.1);
+        }
+
+        .truth-table th {
+            background: rgba(245, 158, 11, 0.2);
+            color: var(--accent);
+        }
+
+        .truth-table td.t {
+            background: rgba(34, 197, 94, 0.1);
+            color: var(--true);
+        }
+
+        .truth-table td.f {
+            background: rgba(239, 68, 68, 0.1);
+            color: var(--false);
+        }
+
+        .expr-input {
+            width: 100%;
+            padding: 12px;
+            background: #000;
+            border: 1px solid rgba(255, 255, 255, 0.2);
+            border-radius: 10px;
+            font-family: 'JetBrains Mono', monospace;
+            color: var(--text);
+            font-size: 1rem;
+        }
+
+        .expr-input:focus {
+            outline: none;
+            border-color: var(--accent);
+        }
+
+        button {
+            padding: 10px 20px;
+            border-radius: 8px;
+            border: none;
+            background: var(--accent);
+            color: #000;
+            font-weight: 600;
+            cursor: pointer;
+        }
+
+        .result-box {
+            margin-top: 15px;
+            padding: 15px;
+            background: rgba(245, 158, 11, 0.1);
+            border-radius: 10px;
+            text-align: center;
+            font-size: 1.2rem;
+        }
+
+        .examples {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 8px;
+            margin-top: 10px;
+        }
+
+        .example-btn {
+            padding: 6px 12px;
+            background: rgba(255, 255, 255, 0.05);
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            border-radius: 6px;
+            cursor: pointer;
+            color: var(--text);
+            font-size: 0.8rem;
+        }
+
+        .example-btn:hover {
+            background: rgba(245, 158, 11, 0.2);
+        }
+    </style>
+</head>
+
+<body>
+    <div class="container">
+        <header>
+            <h1>⚡ Mô phỏng Boolean Algebra</h1>
+            <p style="color: var(--dim);">Thực hành các phép toán logic AND, OR, NOT, XOR, XNOR</p>
+        </header>
+
+        <div class="grid">
+            <div class="card">
+                <h2>🔧 Thử nghiệm tương tác</h2>
+                <div class="input-row">
+                    <div class="var-toggle">
+                        <label>A =</label>
+                        <div class="toggle" id="toggle-a" onclick="toggleVar('a')"></div>
+                        <span class="val false" id="val-a">0</span>
+                    </div>
+                    <div class="var-toggle">
+                        <label>B =</label>
+                        <div class="toggle" id="toggle-b" onclick="toggleVar('b')"></div>
+                        <span class="val false" id="val-b">0</span>
+                    </div>
+                </div>
+                <table class="truth-table">
+                    <tr>
+                        <th>Phép toán</th>
+                        <th>Ký hiệu</th>
+                        <th>Kết quả</th>
+                    </tr>
+                    <tr>
+                        <td>A AND B</td>
+                        <td>A · B</td>
+                        <td id="res-and" class="f">0</td>
+                    </tr>
+                    <tr>
+                        <td>A OR B</td>
+                        <td>A + B</td>
+                        <td id="res-or" class="f">0</td>
+                    </tr>
+                    <tr>
+                        <td>NOT A</td>
+                        <td>Ā</td>
+                        <td id="res-not" class="t">1</td>
+                    </tr>
+                    <tr>
+                        <td>A XOR B</td>
+                        <td>A ⊕ B</td>
+                        <td id="res-xor" class="f">0</td>
+                    </tr>
+                    <tr>
+                        <td>A XNOR B</td>
+                        <td>A ⊙ B</td>
+                        <td id="res-xnor" class="t">1</td>
+                    </tr>
+                </table>
+            </div>
+
+            <div class="card">
+                <h2>📝 Tính biểu thức</h2>
+                <p style="color: var(--dim); font-size: 0.85rem; margin-bottom: 10px;">Sử dụng: AND(*), OR(+), NOT(!),
+                    XOR(^)</p>
+                <input class="expr-input" id="expr" placeholder="Ví dụ: A * B + !A" value="A * B + !A * !B">
+                <div class="examples">
+                    <button class="example-btn" onclick="setExpr('A * B')">A AND B</button>
+                    <button class="example-btn" onclick="setExpr('A + B')">A OR B</button>
+                    <button class="example-btn" onclick="setExpr('!A')">NOT A</button>
+                    <button class="example-btn" onclick="setExpr('A ^ B')">A XOR B</button>
+                    <button class="example-btn" onclick="setExpr('!(A ^ B)')">A XNOR B</button>
+                    <button class="example-btn" onclick="setExpr('A * !B + !A * B')">XOR mở rộng</button>
+                </div>
+                <div class="result-box">
+                    Kết quả: <span id="expr-result" class="val true">1</span>
+                </div>
+                <button style="margin-top: 15px; width: 100%;" onclick="evalExpr()">Tính toán</button>
+            </div>
+        </div>
+
+        <div class="card">
+            <h2>📊 Bảng chân lý đầy đủ</h2>
+            <table class="truth-table">
+                <tr>
+                    <th>A</th>
+                    <th>B</th>
+                    <th>AND</th>
+                    <th>OR</th>
+                    <th>NOT A</th>
+                    <th>XOR</th>
+                    <th>XNOR</th>
+                </tr>
+                <tr>
+                    <td class="f">0</td>
+                    <td class="f">0</td>
+                    <td class="f">0</td>
+                    <td class="f">0</td>
+                    <td class="t">1</td>
+                    <td class="f">0</td>
+                    <td class="t">1</td>
+                </tr>
+                <tr>
+                    <td class="f">0</td>
+                    <td class="t">1</td>
+                    <td class="f">0</td>
+                    <td class="t">1</td>
+                    <td class="t">1</td>
+                    <td class="t">1</td>
+                    <td class="f">0</td>
+                </tr>
+                <tr>
+                    <td class="t">1</td>
+                    <td class="f">0</td>
+                    <td class="f">0</td>
+                    <td class="t">1</td>
+                    <td class="f">0</td>
+                    <td class="t">1</td>
+                    <td class="f">0</td>
+                </tr>
+                <tr>
+                    <td class="t">1</td>
+                    <td class="t">1</td>
+                    <td class="t">1</td>
+                    <td class="t">1</td>
+                    <td class="f">0</td>
+                    <td class="f">0</td>
+                    <td class="t">1</td>
+                </tr>
+            </table>
+        </div>
+    </div>
+
+    <script>
+        let a = 0, b = 0;
+
+        function toggleVar(v) {
+            if (v === 'a') { a = 1 - a; }
+            else { b = 1 - b; }
+            update();
+        }
+
+        function update() {
+            document.getElementById('toggle-a').classList.toggle('on', a === 1);
+            document.getElementById('toggle-b').classList.toggle('on', b === 1);
+            document.getElementById('val-a').innerText = a;
+            document.getElementById('val-a').className = 'val ' + (a ? 'true' : 'false');
+            document.getElementById('val-b').innerText = b;
+            document.getElementById('val-b').className = 'val ' + (b ? 'true' : 'false');
+
+            const and = a & b, or = a | b, not = 1 - a, xor = a ^ b, xnor = 1 - xor;
+            setCell('res-and', and);
+            setCell('res-or', or);
+            setCell('res-not', not);
+            setCell('res-xor', xor);
+            setCell('res-xnor', xnor);
+            evalExpr();
+        }
+
+        function setCell(id, val) {
+            const el = document.getElementById(id);
+            el.innerText = val;
+            el.className = val ? 't' : 'f';
+        }
+
+        function setExpr(e) {
+            document.getElementById('expr').value = e;
+            evalExpr();
+        }
+
+        function evalExpr() {
+            const expr = document.getElementById('expr').value
+                .toUpperCase()
+                .replace(/A/g, a)
+                .replace(/B/g, b)
+                .replace(/\*/g, '&')
+                .replace(/\+/g, '|')
+                .replace(/!/g, '~')
+                .replace(/\^/g, '^')
+                .replace(/~/g, '!');
+            try {
+                const result = eval(expr) ? 1 : 0;
+                const el = document.getElementById('expr-result');
+                el.innerText = result;
+                el.className = 'val ' + (result ? 'true' : 'false');
+            } catch (e) {
+                document.getElementById('expr-result').innerText = 'Lỗi';
+            }
+        }
+
+        update();
+    </script>
+</body>
+
+</html>

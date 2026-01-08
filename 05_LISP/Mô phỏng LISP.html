@@ -1,0 +1,433 @@
+<!DOCTYPE html>
+<html lang="vi">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Mô phỏng LISP - ACSL</title>
+    <link
+        href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;800&family=JetBrains+Mono:wght@400;700&display=swap"
+        rel="stylesheet">
+    <style>
+        :root {
+            --bg: #0a0a0f;
+            --card-bg: rgba(20, 20, 30, 0.9);
+            --accent: #22c55e;
+            --accent-glow: rgba(34, 197, 94, 0.4);
+            --text: #f1f5f9;
+            --text-dim: #94a3b8;
+            --error: #ef4444;
+        }
+
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Inter', sans-serif;
+            background: var(--bg);
+            color: var(--text);
+            padding: 30px 15px;
+            min-height: 100vh;
+        }
+
+        .container {
+            max-width: 1100px;
+            margin: 0 auto;
+        }
+
+        header {
+            text-align: center;
+            margin-bottom: 30px;
+        }
+
+        h1 {
+            font-size: 2.2rem;
+            font-weight: 800;
+            background: linear-gradient(to right, #22c55e, #3b82f6);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+        }
+
+        .subtitle {
+            color: var(--text-dim);
+            margin-top: 8px;
+        }
+
+        .main-grid {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 20px;
+        }
+
+        @media (max-width: 800px) {
+            .main-grid {
+                grid-template-columns: 1fr;
+            }
+        }
+
+        .card {
+            background: var(--card-bg);
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            border-radius: 16px;
+            padding: 20px;
+        }
+
+        .card-title {
+            font-weight: 600;
+            color: var(--accent);
+            margin-bottom: 15px;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        .code-input {
+            width: 100%;
+            height: 150px;
+            background: #000;
+            border: 1px solid rgba(255, 255, 255, 0.2);
+            border-radius: 10px;
+            padding: 15px;
+            font-family: 'JetBrains Mono', monospace;
+            font-size: 0.95rem;
+            color: var(--text);
+            resize: vertical;
+        }
+
+        .code-input:focus {
+            outline: none;
+            border-color: var(--accent);
+        }
+
+        .btn-row {
+            display: flex;
+            gap: 10px;
+            margin-top: 15px;
+        }
+
+        button {
+            padding: 10px 20px;
+            border-radius: 8px;
+            border: none;
+            font-weight: 600;
+            cursor: pointer;
+            transition: 0.2s;
+        }
+
+        .btn-run {
+            background: var(--accent);
+            color: #000;
+        }
+
+        .btn-run:hover {
+            box-shadow: 0 0 20px var(--accent-glow);
+        }
+
+        .btn-clear {
+            background: #374151;
+            color: #fff;
+        }
+
+        .output-box {
+            background: #000;
+            border-radius: 10px;
+            padding: 15px;
+            min-height: 100px;
+            font-family: 'JetBrains Mono', monospace;
+            font-size: 0.9rem;
+            white-space: pre-wrap;
+        }
+
+        .output-box .result {
+            color: var(--accent);
+        }
+
+        .output-box .error {
+            color: var(--error);
+        }
+
+        .output-box .step {
+            color: var(--text-dim);
+            border-left: 2px solid #374151;
+            padding-left: 10px;
+            margin: 5px 0;
+        }
+
+        .examples {
+            display: grid;
+            gap: 8px;
+        }
+
+        .example-btn {
+            background: rgba(255, 255, 255, 0.05);
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            padding: 10px;
+            border-radius: 8px;
+            text-align: left;
+            color: var(--text);
+            font-family: 'JetBrains Mono', monospace;
+            font-size: 0.8rem;
+            cursor: pointer;
+            transition: 0.2s;
+        }
+
+        .example-btn:hover {
+            background: rgba(34, 197, 94, 0.1);
+            border-color: var(--accent);
+        }
+
+        .ref-table {
+            width: 100%;
+            border-collapse: collapse;
+            font-size: 0.85rem;
+        }
+
+        .ref-table th,
+        .ref-table td {
+            padding: 8px;
+            text-align: left;
+            border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+        }
+
+        .ref-table th {
+            color: var(--accent);
+        }
+
+        .ref-table code {
+            background: rgba(255, 255, 255, 0.1);
+            padding: 2px 6px;
+            border-radius: 4px;
+        }
+    </style>
+</head>
+
+<body>
+    <div class="container">
+        <header>
+            <h1>🌿 Mô phỏng LISP</h1>
+            <p class="subtitle">Trình thông dịch LISP đơn giản cho ACSL</p>
+        </header>
+
+        <div class="main-grid">
+            <div>
+                <div class="card">
+                    <div class="card-title">📝 Nhập biểu thức LISP</div>
+                    <textarea class="code-input" id="input"
+                        placeholder="(ADD 2 3)&#10;(CAR '(A B C))&#10;(MULT (ADD 1 2) 4)">(MULT (ADD 6 5 0) (MULT 5 1 2 2) (DIV 6 (SUB 2 5)))</textarea>
+                    <div class="btn-row">
+                        <button class="btn-run" id="btn-run">▶ Chạy</button>
+                        <button class="btn-clear" id="btn-clear">Xóa</button>
+                    </div>
+                </div>
+
+                <div class="card" style="margin-top: 20px;">
+                    <div class="card-title">📚 Ví dụ mẫu</div>
+                    <div class="examples">
+                        <button class="example-btn" onclick="loadExample(0)">(ADD 2 3 5) → 10</button>
+                        <button class="example-btn" onclick="loadExample(1)">(MULT (ADD 2 3) (SUB 10 3)) → 35</button>
+                        <button class="example-btn" onclick="loadExample(2)">(CAR '(A B C D)) → A</button>
+                        <button class="example-btn" onclick="loadExample(3)">(CDR '(A B C D)) → (B C D)</button>
+                        <button class="example-btn" onclick="loadExample(4)">(CADR '(A B C D)) → B</button>
+                        <button class="example-btn" onclick="loadExample(5)">(REVERSE '(1 2 3 4)) → (4 3 2 1)</button>
+                        <button class="example-btn" onclick="loadExample(6)">(CONS 'X '(Y Z)) → (X Y Z)</button>
+                    </div>
+                </div>
+            </div>
+
+            <div>
+                <div class="card">
+                    <div class="card-title">💻 Kết quả</div>
+                    <div class="output-box" id="output">Nhấn "Chạy" để xem kết quả...</div>
+                </div>
+
+                <div class="card" style="margin-top: 20px;">
+                    <div class="card-title">📖 Bảng tham chiếu hàm</div>
+                    <table class="ref-table">
+                        <tr>
+                            <th>Hàm</th>
+                            <th>Mô tả</th>
+                        </tr>
+                        <tr>
+                            <td><code>ADD</code></td>
+                            <td>Cộng các số</td>
+                        </tr>
+                        <tr>
+                            <td><code>SUB</code></td>
+                            <td>Trừ: a - b - c...</td>
+                        </tr>
+                        <tr>
+                            <td><code>MULT</code></td>
+                            <td>Nhân các số</td>
+                        </tr>
+                        <tr>
+                            <td><code>DIV</code></td>
+                            <td>Chia: a / b / c...</td>
+                        </tr>
+                        <tr>
+                            <td><code>CAR</code></td>
+                            <td>Phần tử đầu của list</td>
+                        </tr>
+                        <tr>
+                            <td><code>CDR</code></td>
+                            <td>List bỏ phần tử đầu</td>
+                        </tr>
+                        <tr>
+                            <td><code>CADR</code></td>
+                            <td>= CAR(CDR x)</td>
+                        </tr>
+                        <tr>
+                            <td><code>CONS</code></td>
+                            <td>Thêm vào đầu list</td>
+                        </tr>
+                        <tr>
+                            <td><code>REVERSE</code></td>
+                            <td>Đảo ngược list</td>
+                        </tr>
+                    </table>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        const examples = [
+            "(ADD 2 3 5)",
+            "(MULT (ADD 2 3) (SUB 10 3))",
+            "(CAR '(A B C D))",
+            "(CDR '(A B C D))",
+            "(CADR '(A B C D))",
+            "(REVERSE '(1 2 3 4))",
+            "(CONS 'X '(Y Z))"
+        ];
+
+        function loadExample(i) {
+            document.getElementById('input').value = examples[i];
+        }
+
+        document.getElementById('btn-clear').onclick = () => {
+            document.getElementById('input').value = '';
+            document.getElementById('output').innerHTML = 'Nhấn "Chạy" để xem kết quả...';
+        };
+
+        document.getElementById('btn-run').onclick = () => {
+            const input = document.getElementById('input').value.trim();
+            const output = document.getElementById('output');
+
+            try {
+                const result = evaluateLisp(input);
+                output.innerHTML = `<span class="result">Kết quả: ${formatResult(result)}</span>`;
+            } catch (e) {
+                output.innerHTML = `<span class="error">Lỗi: ${e.message}</span>`;
+            }
+        };
+
+        function tokenize(expr) {
+            return expr.replace(/\(/g, ' ( ').replace(/\)/g, ' ) ').replace(/'/g, " ' ").trim().split(/\s+/).filter(t => t);
+        }
+
+        function parse(tokens) {
+            if (tokens.length === 0) throw new Error("Biểu thức rỗng");
+            const token = tokens.shift();
+            if (token === '(') {
+                const list = [];
+                while (tokens[0] !== ')') {
+                    if (tokens.length === 0) throw new Error("Thiếu dấu )");
+                    list.push(parse(tokens));
+                }
+                tokens.shift();
+                return list;
+            } else if (token === ')') {
+                throw new Error("Dấu ) không mong đợi");
+            } else if (token === "'") {
+                return ['QUOTE', parse(tokens)];
+            } else if (!isNaN(token)) {
+                return parseFloat(token);
+            } else {
+                return token.toUpperCase();
+            }
+        }
+
+        function evaluateLisp(expr) {
+            const tokens = tokenize(expr);
+            const ast = parse(tokens);
+            return evaluate(ast, {});
+        }
+
+        function evaluate(expr, env) {
+            if (typeof expr === 'number') return expr;
+            if (typeof expr === 'string') {
+                if (env[expr] !== undefined) return env[expr];
+                return expr;
+            }
+            if (!Array.isArray(expr)) return expr;
+            if (expr.length === 0) return [];
+
+            const [fn, ...args] = expr;
+
+            if (fn === 'QUOTE') return args[0];
+
+            if (fn === 'ADD' || fn === '+') {
+                return args.reduce((a, b) => a + evaluate(b, env), 0);
+            }
+            if (fn === 'SUB' || fn === '-') {
+                const vals = args.map(a => evaluate(a, env));
+                return vals.slice(1).reduce((a, b) => a - b, vals[0]);
+            }
+            if (fn === 'MULT' || fn === '*') {
+                return args.reduce((a, b) => a * evaluate(b, env), 1);
+            }
+            if (fn === 'DIV' || fn === '/') {
+                const vals = args.map(a => evaluate(a, env));
+                return vals.slice(1).reduce((a, b) => a / b, vals[0]);
+            }
+            if (fn === 'CAR') {
+                const list = evaluate(args[0], env);
+                if (!Array.isArray(list)) throw new Error("CAR cần một list");
+                return list[0];
+            }
+            if (fn === 'CDR') {
+                const list = evaluate(args[0], env);
+                if (!Array.isArray(list)) throw new Error("CDR cần một list");
+                return list.slice(1);
+            }
+            if (fn === 'CADR') {
+                const list = evaluate(args[0], env);
+                return list[1];
+            }
+            if (fn === 'CADDR') {
+                const list = evaluate(args[0], env);
+                return list[2];
+            }
+            if (fn === 'CONS') {
+                const first = evaluate(args[0], env);
+                const rest = evaluate(args[1], env);
+                return [first, ...rest];
+            }
+            if (fn === 'REVERSE') {
+                const list = evaluate(args[0], env);
+                return [...list].reverse();
+            }
+            if (fn === 'SETQ') {
+                const varName = args[0];
+                const value = evaluate(args[1], env);
+                env[varName] = value;
+                return value;
+            }
+
+            throw new Error(`Hàm không xác định: ${fn}`);
+        }
+
+        function formatResult(val) {
+            if (Array.isArray(val)) {
+                if (val.length === 0) return 'NIL';
+                return '(' + val.map(formatResult).join(' ') + ')';
+            }
+            return String(val);
+        }
+    </script>
+</body>
+
+</html>

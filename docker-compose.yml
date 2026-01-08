@@ -1,0 +1,25 @@
+services:
+  web:
+    build: .
+    ports:
+      - "8000:8000"
+    volumes:
+      # Mount Django project for live reload
+      - ./acsl_portal:/app/acsl_portal
+      # Mount topic folders as static
+      - ./01_He_so_va_Chuyen_doi_co_so:/app/01_He_so_va_Chuyen_doi_co_so:ro
+      - ./02_Tien_to_va_Trung_to:/app/02_Tien_to_va_Trung_to:ro
+      - ./03_De_quy:/app/03_De_quy:ro
+      - ./04_Thao_tac_chuoi_bit:/app/04_Thao_tac_chuoi_bit:ro
+      - ./05_LISP:/app/05_LISP:ro
+      - ./06_ACSL_What_Does_This_Program_Do:/app/06_ACSL_What_Does_This_Program_Do:ro
+      - ./07_Tai_lieu_PDF:/app/07_Tai_lieu_PDF:ro
+      - ./08_Boolean_Algebra:/app/08_Boolean_Algebra:ro
+      - ./09_FSA_Regular_Expressions:/app/09_FSA_Regular_Expressions:ro
+      - ./10_Graph_Theory:/app/10_Graph_Theory:ro
+      - ./11_Digital_Electronics:/app/11_Digital_Electronics:ro
+      - ./12_Assembly_Language:/app/12_Assembly_Language:ro
+    environment:
+      - DEBUG=True
+      - ALLOWED_HOSTS=localhost,127.0.0.1,0.0.0.0
+    restart: unless-stopped

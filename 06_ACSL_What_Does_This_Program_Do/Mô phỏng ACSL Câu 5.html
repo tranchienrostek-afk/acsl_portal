@@ -1,0 +1,342 @@
+<!DOCTYPE html>
+<html lang="vi">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Mô phỏng ACSL - Câu 5: Biến số phức tạp</title>
+    <link
+        href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;800&family=JetBrains+Mono:wght@400;700&display=swap"
+        rel="stylesheet">
+    <style>
+        :root {
+            --bg: #030712;
+            --card-bg: rgba(17, 24, 39, 0.8);
+            --accent: #6366f1;
+            --text: #f9fafb;
+            --text-dim: #9ca3af;
+            --true: #10b981;
+            --false: #ef4444;
+        }
+
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Inter', sans-serif;
+            background: var(--bg);
+            color: var(--text);
+            padding: 40px 20px;
+        }
+
+        .container {
+            max-width: 1000px;
+            margin: 0 auto;
+        }
+
+        header {
+            text-align: center;
+            margin-bottom: 40px;
+        }
+
+        h1 {
+            font-size: 2.2rem;
+            font-weight: 800;
+            background: linear-gradient(to right, #6366f1, #a855f7);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+        }
+
+        .card {
+            background: var(--card-bg);
+            backdrop-filter: blur(12px);
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            border-radius: 24px;
+            padding: 30px;
+            margin-bottom: 30px;
+        }
+
+        .code-block {
+            font-family: 'JetBrains Mono', monospace;
+            background: #000;
+            padding: 15px;
+            border-radius: 12px;
+            border-left: 4px solid var(--accent);
+            margin-bottom: 20px;
+            font-size: 0.8rem;
+            line-height: 1.8;
+        }
+
+        .code-line {
+            display: block;
+            padding: 2px 0;
+            transition: 0.2s;
+        }
+
+        .code-line.active {
+            background: rgba(99, 102, 241, 0.3);
+            border-left: 3px solid var(--accent);
+            padding-left: 10px;
+        }
+
+        .var-grid {
+            display: grid;
+            grid-template-columns: repeat(5, 1fr);
+            gap: 15px;
+            margin: 25px 0;
+        }
+
+        .var-card {
+            background: rgba(255, 255, 255, 0.03);
+            padding: 20px;
+            border-radius: 12px;
+            text-align: center;
+            border: 2px solid rgba(255, 255, 255, 0.1);
+            transition: 0.3s;
+        }
+
+        .var-card.changed {
+            border-color: var(--accent);
+            background: rgba(99, 102, 241, 0.1);
+        }
+
+        .var-name {
+            font-size: 0.8rem;
+            color: var(--text-dim);
+            margin-bottom: 5px;
+        }
+
+        .var-val {
+            font-size: 1.8rem;
+            font-weight: 800;
+            color: var(--accent);
+        }
+
+        .step-box {
+            background: rgba(99, 102, 241, 0.1);
+            padding: 20px;
+            border-radius: 12px;
+            border: 1px dashed var(--accent);
+            margin-bottom: 20px;
+        }
+
+        .step-title {
+            font-weight: 600;
+            margin-bottom: 10px;
+        }
+
+        .condition {
+            display: inline-block;
+            padding: 4px 10px;
+            border-radius: 6px;
+            font-size: 0.85rem;
+            font-weight: 600;
+        }
+
+        .condition.true {
+            background: rgba(16, 185, 129, 0.2);
+            color: var(--true);
+        }
+
+        .condition.false {
+            background: rgba(239, 68, 68, 0.2);
+            color: var(--false);
+        }
+
+        .controls {
+            display: flex;
+            gap: 15px;
+            justify-content: center;
+            margin-top: 25px;
+        }
+
+        button {
+            padding: 12px 24px;
+            border-radius: 12px;
+            border: none;
+            background: var(--accent);
+            color: white;
+            font-weight: 600;
+            cursor: pointer;
+            transition: 0.2s;
+        }
+
+        button:hover {
+            transform: translateY(-2px);
+        }
+
+        button:disabled {
+            opacity: 0.5;
+        }
+
+        .result-box {
+            text-align: center;
+            padding: 30px;
+            background: linear-gradient(135deg, rgba(99, 102, 241, 0.1), rgba(168, 85, 247, 0.1));
+            border-radius: 16px;
+            margin-top: 20px;
+        }
+
+        .result-val {
+            font-size: 3rem;
+            font-weight: 800;
+            color: var(--accent);
+        }
+    </style>
+</head>
+
+<body>
+    <div class="container">
+        <header>
+            <h1>Mô phỏng ACSL: Câu 5</h1>
+            <p>Thao tác biến số phức tạp với nhiều điều kiện</p>
+        </header>
+
+        <div class="card">
+            <div class="code-block" id="code"></div>
+
+            <div class="var-grid">
+                <div class="var-card" id="card-a">
+                    <div class="var-name">a</div>
+                    <div class="var-val" id="val-a">12</div>
+                </div>
+                <div class="var-card" id="card-b">
+                    <div class="var-name">b</div>
+                    <div class="var-val" id="val-b">1</div>
+                </div>
+                <div class="var-card" id="card-c">
+                    <div class="var-name">c</div>
+                    <div class="var-val" id="val-c">0</div>
+                </div>
+                <div class="var-card" id="card-d">
+                    <div class="var-name">d</div>
+                    <div class="var-val" id="val-d">4</div>
+                </div>
+                <div class="var-card" id="card-e">
+                    <div class="var-name">e</div>
+                    <div class="var-val" id="val-e">2</div>
+                </div>
+            </div>
+
+            <div class="step-box" id="step-box">
+                <div class="step-title" id="step-title">Bấm "Tiếp theo" để bắt đầu</div>
+                <div id="step-detail"></div>
+            </div>
+
+            <div class="controls">
+                <button id="btn-next">Tiếp theo</button>
+                <button id="btn-reset" style="background: #4b5563;">Reset</button>
+            </div>
+
+            <div class="result-box">
+                <p>Kết quả Output</p>
+                <div class="result-val" id="result">?</div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        const codeLines = [
+            'a = 12: b = 1: c = 0: d = 4: e = 2',
+            'IF a > d THEN a = a - d',
+            'IF (d - b) < (e - a) THEN d = d + e',
+            'IF a * b == d * e THEN e = a * b / e ELSE d = d * e / a',
+            'IF d² <= (b + 1)² THEN d = b + 1 ELSE b = b + 1',
+            'IF a + b * c == d + e * c THEN a = b * c ELSE d = e * c',
+            'output (a + e) / b + (d + c) ^ b * c'
+        ];
+
+        let a = 12, b = 1, c = 0, d = 4, e = 2;
+        let step = 0;
+
+        const codeDiv = document.getElementById('code');
+        const stepTitle = document.getElementById('step-title');
+        const stepDetail = document.getElementById('step-detail');
+        const btnNext = document.getElementById('btn-next');
+        const btnReset = document.getElementById('btn-reset');
+        const result = document.getElementById('result');
+
+        function renderCode() {
+            codeDiv.innerHTML = codeLines.map((line, i) =>
+                `<span class="code-line ${i === step ? 'active' : ''}">${line}</span>`
+            ).join('');
+        }
+
+        function updateVars(changed = []) {
+            document.getElementById('val-a').innerText = a;
+            document.getElementById('val-b').innerText = b;
+            document.getElementById('val-c').innerText = c;
+            document.getElementById('val-d').innerText = d;
+            document.getElementById('val-e').innerText = e;
+            ['a', 'b', 'c', 'd', 'e'].forEach(v => {
+                document.getElementById(`card-${v}`).classList.toggle('changed', changed.includes(v));
+            });
+        }
+
+        function init() {
+            a = 12; b = 1; c = 0; d = 4; e = 2;
+            step = 0;
+            stepTitle.innerText = 'Bấm "Tiếp theo" để bắt đầu';
+            stepDetail.innerHTML = '';
+            result.innerText = '?';
+            btnNext.disabled = false;
+            renderCode();
+            updateVars();
+        }
+
+        btnNext.onclick = () => {
+            step++;
+            renderCode();
+
+            if (step === 1) {
+                stepTitle.innerText = 'Bước 1: Kiểm tra a > d';
+                const cond = a > d;
+                stepDetail.innerHTML = `${a} > ${d} → <span class="condition ${cond}">${cond ? 'TRUE' : 'FALSE'}</span>`;
+                if (cond) { a = a - d; stepDetail.innerHTML += `<br>a = ${a + d} - ${d} = ${a}`; }
+                updateVars(cond ? ['a'] : []);
+            } else if (step === 2) {
+                stepTitle.innerText = 'Bước 2: Kiểm tra (d - b) < (e - a)';
+                const left = d - b, right = e - a;
+                const cond = left < right;
+                stepDetail.innerHTML = `(${d} - ${b}) < (${e} - ${a}) → ${left} < ${right} → <span class="condition ${cond}">${cond ? 'TRUE' : 'FALSE'}</span>`;
+                if (cond) { d = d + e; stepDetail.innerHTML += `<br>d = ${d - e} + ${e} = ${d}`; updateVars(['d']); } else { updateVars([]); }
+            } else if (step === 3) {
+                stepTitle.innerText = 'Bước 3: Kiểm tra a * b == d * e';
+                const left = a * b, right = d * e;
+                const cond = left === right;
+                stepDetail.innerHTML = `${a} × ${b} == ${d} × ${e} → ${left} == ${right} → <span class="condition ${cond}">${cond ? 'TRUE' : 'FALSE'}</span>`;
+                if (cond) { e = Math.floor((a * b) / e); stepDetail.innerHTML += `<br>e = ${a} × ${b} / ${e} = ${e}`; updateVars(['e']); }
+                else { d = Math.floor((d * e) / a); updateVars(['d']); }
+            } else if (step === 4) {
+                stepTitle.innerText = 'Bước 4: Kiểm tra d² <= (b + 1)²';
+                const left = d * d, right = (b + 1) * (b + 1);
+                const cond = left <= right;
+                stepDetail.innerHTML = `${d}² <= (${b} + 1)² → ${left} <= ${right} → <span class="condition ${cond}">${cond ? 'TRUE' : 'FALSE'}</span>`;
+                if (cond) { d = b + 1; updateVars(['d']); }
+                else { b = b + 1; stepDetail.innerHTML += `<br>b = ${b - 1} + 1 = ${b}`; updateVars(['b']); }
+            } else if (step === 5) {
+                stepTitle.innerText = 'Bước 5: Kiểm tra a + b*c == d + e*c';
+                const left = a + b * c, right = d + e * c;
+                const cond = left === right;
+                stepDetail.innerHTML = `${a} + ${b}×${c} == ${d} + ${e}×${c} → ${left} == ${right} → <span class="condition ${cond}">${cond ? 'TRUE' : 'FALSE'}</span>`;
+                if (cond) { a = b * c; updateVars(['a']); }
+                else { d = e * c; stepDetail.innerHTML += `<br>d = ${e} × ${c} = ${d}`; updateVars(['d']); }
+            } else if (step === 6) {
+                stepTitle.innerText = 'Bước 6: Tính Output';
+                const res = (a + e) / b + Math.pow(d + c, b) * c;
+                stepDetail.innerHTML = `(${a} + ${e}) / ${b} + (${d} + ${c})^${b} × ${c}<br>= ${(a + e) / b} + ${Math.pow(d + c, b) * c} = <strong>${res}</strong>`;
+                result.innerText = res;
+                btnNext.disabled = true;
+                updateVars([]);
+            }
+        };
+
+        btnReset.onclick = init;
+        init();
+    </script>
+</body>
+
+</html>

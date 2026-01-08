@@ -1,0 +1,181 @@
+<!DOCTYPE html>
+<html lang="vi">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Bài tập Assembly - ACSL</title>
+    <link
+        href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;800&family=JetBrains+Mono:wght@400;700&display=swap"
+        rel="stylesheet">
+    <style>
+        :root {
+            --bg: #0f172a;
+            --card: rgba(30, 41, 59, 0.8);
+            --accent: #06b6d4;
+            --text: #f1f5f9;
+            --correct: #22c55e;
+            --wrong: #ef4444;
+        }
+
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Inter', sans-serif;
+            background: var(--bg);
+            color: var(--text);
+            padding: 30px 15px;
+        }
+
+        .container {
+            max-width: 850px;
+            margin: 0 auto;
+        }
+
+        header {
+            text-align: center;
+            margin-bottom: 40px;
+        }
+
+        h1 {
+            font-size: 2rem;
+            background: linear-gradient(to right, #06b6d4, #8b5cf6);
+            -webkit-background-clip: text;
+            background-clip: text;
+            -webkit-text-fill-color: transparent;
+        }
+
+        .quiz-card {
+            background: var(--card);
+            border-radius: 16px;
+            padding: 25px;
+            margin-bottom: 25px;
+            border-left: 4px solid var(--accent);
+        }
+
+        .q-num {
+            color: var(--accent);
+            font-weight: 800;
+            font-size: 0.9rem;
+            margin-bottom: 10px;
+        }
+
+        .code {
+            font-family: 'JetBrains Mono', monospace;
+            background: #000;
+            padding: 12px;
+            border-radius: 8px;
+            margin: 10px 0;
+            white-space: pre;
+        }
+
+        .options {
+            display: grid;
+            gap: 10px;
+        }
+
+        .opt-btn {
+            padding: 12px 15px;
+            background: rgba(255, 255, 255, 0.05);
+            border: 2px solid rgba(255, 255, 255, 0.1);
+            border-radius: 10px;
+            cursor: pointer;
+            text-align: left;
+            color: var(--text);
+        }
+
+        .opt-btn:hover:not(:disabled) {
+            background: rgba(6, 182, 212, 0.1);
+            border-color: var(--accent);
+        }
+
+        .opt-btn.correct {
+            background: rgba(34, 197, 94, 0.2);
+            border-color: var(--correct);
+        }
+
+        .opt-btn.wrong {
+            background: rgba(239, 68, 68, 0.2);
+            border-color: var(--wrong);
+        }
+
+        .opt-btn:disabled {
+            cursor: default;
+        }
+
+        .explain {
+            display: none;
+            margin-top: 15px;
+            padding: 15px;
+            background: rgba(6, 182, 212, 0.1);
+            border-radius: 10px;
+            border-left: 3px solid var(--accent);
+        }
+
+        .explain.show {
+            display: block;
+        }
+
+        .score-bar {
+            position: fixed;
+            bottom: 20px;
+            right: 20px;
+            background: #1e293b;
+            padding: 12px 25px;
+            border-radius: 50px;
+            font-weight: 700;
+        }
+    </style>
+</head>
+
+<body>
+    <div class="container">
+        <header>
+            <h1>📝 Bài tập Assembly Language - ACSL</h1>
+            <p style="color: #94a3b8; margin-top: 8px;">Luyện tập ngôn ngữ Assembly ACSL</p>
+        </header>
+        <div id="quiz"></div>
+        <div class="score-bar">Điểm: <span id="score">0</span> / <span id="total">10</span></div>
+    </div>
+
+    <script>
+        const questions = [
+            { q: "Giá trị khởi tạo của ACC (Accumulator) là?", options: ["1", "0", "-1", "Undefined"], answer: 1, explain: "ACC luôn bắt đầu với giá trị 0" },
+            { q: "LOAD A làm gì?", options: ["Lưu ACC vào A", "Nạp giá trị A vào ACC", "Cộng A vào ACC", "In A"], answer: 1, explain: "LOAD nạp giá trị từ memory vào ACC" },
+            { q: "STORE X làm gì?", options: ["Nạp X vào ACC", "Lưu ACC vào X", "Xóa X", "In X"], answer: 1, explain: "STORE lưu giá trị ACC vào memory location X" },
+            { q: "LOAD =5 nghĩa là gì?", options: ["Nạp giá trị tại địa chỉ 5", "Nạp trực tiếp số 5 vào ACC", "Nạp 5 bytes", "Lỗi cú pháp"], answer: 1, explain: "Dấu = biểu thị immediate data - nạp trực tiếp giá trị 5" },
+            { q: "BG LOOP nhảy đến LOOP khi nào?", options: ["ACC > 0", "ACC = 0", "ACC < 0", "Luôn luôn"], answer: 0, explain: "BG = Branch if Greater (than zero), nhảy khi ACC > 0" },
+            { q: "BE END nhảy đến END khi nào?", options: ["ACC > 0", "ACC = 0", "ACC < 0", "Luôn luôn"], answer: 1, explain: "BE = Branch if Equal (to zero), nhảy khi ACC = 0" },
+            { q: "BU DONE nghĩa là gì?", options: ["Nhảy nếu ACC < 0", "Nhảy vô điều kiện", "Kết thúc chương trình", "Nhảy nếu underfow"], answer: 1, explain: "BU = Branch Unconditionally, luôn nhảy đến DONE" },
+            { q: "DC 10 trong 'X DC 10' nghĩa là gì?", options: ["Khai báo hằng X = 10", "Delay 10 cycles", "Decrement 10", "Do 10 lần"], answer: 0, explain: "DC = Define Constant, khai báo X có giá trị 10" },
+            { q: "Sau khi chạy: LOAD =3, ADD =5, giá trị ACC là?", options: ["3", "5", "8", "15"], answer: 2, explain: "LOAD =3 → ACC=3, ADD =5 → ACC=3+5=8" },
+            { q: "Lệnh nào kết thúc chương trình?", options: ["STOP", "END", "HALT", "EXIT"], answer: 1, explain: "END là lệnh kết thúc chương trình trong ACSL Assembly" }
+        ];
+
+        let score = 0;
+        const container = document.getElementById('quiz');
+        questions.forEach((q, i) => {
+            const card = document.createElement('div');
+            card.className = 'quiz-card';
+            card.innerHTML = `<div class="q-num">Câu ${i + 1}</div><div class="q-text">${q.q}</div>${q.code ? `<div class="code">${q.code}</div>` : ''}<div class="options" id="opts-${i}">${q.options.map((opt, j) => `<button class="opt-btn" data-q="${i}" data-opt="${j}">${opt}</button>`).join('')}</div><div class="explain" id="exp-${i}">${q.explain}</div>`;
+            container.appendChild(card);
+        });
+        document.querySelectorAll('.opt-btn').forEach(btn => {
+            btn.onclick = () => {
+                const qi = +btn.dataset.q, oi = +btn.dataset.opt, q = questions[qi];
+                const opts = document.querySelectorAll(`#opts-${qi} .opt-btn`);
+                if (opts[0].disabled) return;
+                opts.forEach((o, i) => { o.disabled = true; if (i === q.answer) o.classList.add('correct'); if (i === oi && i !== q.answer) o.classList.add('wrong'); });
+                if (oi === q.answer) { score++; document.getElementById('score').innerText = score; }
+                document.getElementById(`exp-${qi}`).classList.add('show');
+            };
+        });
+        document.getElementById('total').innerText = questions.length;
+    </script>
+</body>
+
+</html>

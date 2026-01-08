@@ -1,0 +1,252 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Mô phỏng Prefix ➜ Infix</title>
+
+<style>
+:root {
+    --bg1:#2c003e; --bg2:#0f172a;
+    --card:rgba(30,41,59,.75);
+    --primary:#8b5cf6; --accent:#f43f5e;
+    --operand:#3b82f6; --operator:#f59e0b;
+    --complex:#10b981; --text:#f1f5f9;
+}
+body{
+    margin:0; min-height:100vh;
+    font-family:Segoe UI,Roboto,Arial;
+    background:linear-gradient(135deg,var(--bg1),var(--bg2));
+    color:var(--text);
+    display:flex; flex-direction:column; align-items:center;
+    padding:20px;
+}
+h1{font-weight:300;letter-spacing:2px}
+.subtitle{color:#94a3b8;font-style:italic;margin-bottom:25px}
+
+.container{
+    width:100%;max-width:900px;
+    background:var(--card);
+    border-radius:20px;
+    padding:30px;
+    backdrop-filter:blur(12px);
+    box-shadow:0 20px 60px rgba(0,0,0,.6);
+}
+
+/* Controls */
+.controls{display:flex;gap:10px;margin-bottom:25px}
+input{
+    flex:1;padding:14px;
+    background:#0f172a;color:white;
+    border:1px solid #475569;border-radius:10px;
+    font-size:1.2rem;letter-spacing:3px;text-align:center;
+}
+button{
+    border:none;border-radius:10px;
+    padding:0 28px;font-weight:600;
+    color:white;cursor:pointer;
+}
+.btn-start{background:linear-gradient(to right,var(--primary),#6366f1)}
+.btn-step{background:linear-gradient(to right,var(--accent),#e11d48);display:none}
+.btn-reset{background:#475569;display:none}
+
+/* Viz */
+.viz-area{
+    display:grid;
+    grid-template-columns:1fr 250px;
+    gap:25px;
+}
+.section-header{
+    display:flex;justify-content:space-between;
+    color:#cbd5e1;font-size:.85rem;
+    margin-bottom:8px;text-transform:uppercase;
+}
+.box{
+    min-height:120px;padding:20px;
+    border-radius:15px;
+    border:2px dashed #334155;
+    background:rgba(0,0,0,.25);
+}
+#sourceBox{display:flex;flex-wrap:wrap;gap:10px;justify-content:center}
+#stackBox{
+    min-height:300px;
+    display:flex;
+    flex-direction:column-reverse;
+    gap:10px;align-items:center;
+}
+
+/* Items */
+.item{
+    padding:10px 15px;
+    border-radius:8px;
+    font-weight:bold;font-size:1.2rem;
+    color:white;
+    animation:pop .3s;
+}
+.operand{background:var(--operand)}
+.operator{background:var(--operator)}
+.complex{
+    background:var(--complex);
+    font-size:1rem;width:90%;word-break:break-all;
+}
+.highlight{transform:scale(1.2);box-shadow:0 0 20px var(--accent)}
+.processed{opacity:.25;filter:grayscale(1)}
+
+@keyframes pop{from{transform:scale(0)}to{transform:scale(1)}}
+
+.log-box{
+    margin-top:20px;
+    background:#0f172a;
+    color:#10b981;
+    padding:15px;
+    border-radius:10px;
+    font-family:Consolas,monospace;
+    height:110px;overflow:auto;
+    border-left:5px solid var(--primary);
+}
+
+.final-result{
+    grid-column:1/-1;
+    margin-top:15px;
+    padding:20px;
+    background:rgba(16,185,129,.2);
+    border:1px solid var(--complex);
+    color:#34d399;
+    border-radius:15px;
+    text-align:center;
+    font-size:1.5rem;
+    display:none;
+}
+</style>
+</head>
+
+<body>
+
+<h1>Prefix <span style="color:var(--accent)">➜</span> Infix</h1>
+<div class="subtitle">Duyệt từ phải sang trái – Stack LIFO</div>
+
+<div class="container">
+<div class="controls">
+    <input id="inputExpr" value="*+AB-CD" placeholder="VD: *+AB-CD">
+    <button class="btn-start" onclick="init()">Bắt đầu</button>
+    <button class="btn-step" id="btnStep" onclick="nextStep()">Bước tiếp</button>
+    <button class="btn-reset" id="btnReset" onclick="reset()">Làm lại</button>
+</div>
+
+<div class="viz-area">
+    <div>
+        <div class="section-header">
+            <span>Chuỗi Prefix</span>
+            <span>Phải ← Trái</span>
+        </div>
+        <div class="box" id="sourceBox"></div>
+    </div>
+
+    <div>
+        <div class="section-header">
+            <span>Stack</span><span>LIFO</span>
+        </div>
+        <div class="box" id="stackBox"></div>
+    </div>
+
+    <div id="finalResultBox" class="final-result"></div>
+</div>
+
+<div class="log-box" id="logBox">
+> Nhập biểu thức Prefix và nhấn “Bắt đầu”
+</div>
+</div>
+
+<script>
+let steps=[], idx=0;
+const src=document.getElementById("sourceBox");
+const stack=document.getElementById("stackBox");
+const logBox=document.getElementById("logBox");
+const finalBox=document.getElementById("finalResultBox");
+
+function isOp(c){return "+-*/^".includes(c)}
+function log(m){logBox.innerHTML="> "+m+"<br>"+logBox.innerHTML}
+function item(v,t,id){
+    const d=document.createElement("div");
+    d.className="item "+t; d.textContent=v;
+    if(id)d.id=id; return d;
+}
+
+/* Generate algorithm steps */
+function generate(prefix){
+    let s=[], acts=[];
+    for(let i=prefix.length-1;i>=0;i--){
+        let c=prefix[i];
+        acts.push({t:"H",i});
+        if(isOp(c)){
+            if(s.length<2) return [{t:"E",m:"Thiếu toán hạng"}];
+            let a=s.pop(), b=s.pop();
+            let r=`(${a}${c}${b})`;
+            s.push(r);
+            acts.push({t:"OP",m:`${c}: (${a}${c}${b})`,r});
+        }else{
+            s.push(c);
+            acts.push({t:"P",v:c});
+        }
+    }
+    if(s.length!==1) return [{t:"E",m:"Biểu thức sai"}];
+    acts.push({t:"F",r:s[0]});
+    return acts;
+}
+
+function init(){
+    let v=inputExpr.value.replace(/\s+/g,"");
+    if(!v)return alert("Chưa nhập!");
+    src.innerHTML=""; stack.innerHTML="";
+    finalBox.style.display="none";
+    logBox.innerHTML="";
+    idx=0;
+    [...v].forEach((c,i)=>src.appendChild(item(c,isOp(c)?"operator":"operand","s"+i)));
+    steps=generate(v);
+    if(steps[0].t==="E")return alert(steps[0].m);
+    btnStep.style.display=btnReset.style.display="inline-block";
+    document.querySelector(".btn-start").style.display="none";
+    inputExpr.disabled=true;
+    log("Bắt đầu duyệt từ phải sang trái");
+}
+
+function nextStep(){
+    if(idx>=steps.length)return;
+    document.querySelectorAll(".highlight").forEach(e=>e.classList.remove("highlight"));
+    let a=steps[idx];
+
+    if(a.t==="H"){
+        let e=document.getElementById("s"+a.i);
+        if(e){e.classList.add("highlight");e.scrollIntoView({block:"center"})}
+    }
+    if(a.t==="P"){
+        log("Push "+a.v);
+        stack.appendChild(item(a.v,"operand"));
+        let h=document.querySelector(".highlight");
+        if(h)h.classList.add("processed");
+    }
+    if(a.t==="OP"){
+        log("Xử lý toán tử "+a.m);
+        if(stack.children.length>=2){
+            stack.lastElementChild.remove();
+            stack.lastElementChild.remove();
+        }
+        stack.appendChild(item(a.r,"complex"));
+        let h=document.querySelector(".highlight");
+        if(h)h.classList.add("processed");
+    }
+    if(a.t==="F"){
+        log("HOÀN THÀNH");
+        finalBox.textContent="KẾT QUẢ: "+a.r;
+        finalBox.style.display="block";
+        btnStep.disabled=true;
+        stack.lastElementChild?.classList.add("highlight");
+    }
+    idx++;
+}
+
+function reset(){location.reload()}
+</script>
+
+</body>
+</html>

@@ -1,0 +1,446 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Lisp Master Studio - Interactive Edu</title>
+    <style>
+        :root {
+            --bg-dark: #0d1117;
+            --panel-bg: #161b22;
+            --border: #30363d;
+            --accent: #d2a8ff; /* Lisp Purple */
+            --code-bg: #000;
+            --text-main: #c9d1d9;
+            --text-code: #79c0ff;
+            --cons-box: #238636;
+            --atom-box: #1f6feb;
+        }
+
+        * { box-sizing: border-box; }
+
+        body {
+            margin: 0;
+            font-family: 'Segoe UI', 'Consolas', monospace;
+            background-color: var(--bg-dark);
+            color: var(--text-main);
+            height: 100vh;
+            display: grid;
+            grid-template-columns: 350px 1fr 300px;
+            overflow: hidden;
+        }
+
+        /* --- LEFT: LESSONS --- */
+        .sidebar-left {
+            background: var(--panel-bg);
+            border-right: 1px solid var(--border);
+            display: flex;
+            flex-direction: column;
+            overflow-y: auto;
+        }
+
+        .lesson-block {
+            padding: 20px;
+            border-bottom: 1px solid var(--border);
+        }
+
+        h2 { color: var(--accent); margin-top: 0; font-size: 1.1rem; border-bottom: 2px solid var(--border); padding-bottom: 5px; }
+        h3 { color: #fff; font-size: 0.95rem; margin-bottom: 5px; }
+        p { font-size: 0.9rem; color: #8b949e; line-height: 1.5; margin-bottom: 10px; }
+
+        .code-sample {
+            background: var(--code-bg);
+            padding: 10px;
+            border-radius: 6px;
+            font-family: 'Consolas', monospace;
+            color: var(--text-code);
+            margin-bottom: 10px;
+            border: 1px solid var(--border);
+            cursor: pointer;
+            position: relative;
+        }
+        .code-sample:hover { border-color: var(--accent); }
+        .code-sample::after {
+            content: '▶ CHẠY THỬ';
+            position: absolute; right: 5px; top: 5px;
+            font-size: 0.7rem; color: var(--accent); opacity: 0.5;
+        }
+
+        /* --- CENTER: REPL & VISUALIZER --- */
+        .main-stage {
+            display: flex;
+            flex-direction: column;
+            background-image: radial-gradient(#30363d 1px, transparent 1px);
+            background-size: 20px 20px;
+            position: relative;
+        }
+
+        .repl-container {
+            padding: 20px;
+            background: rgba(22, 27, 34, 0.95);
+            border-bottom: 1px solid var(--border);
+            box-shadow: 0 5px 20px rgba(0,0,0,0.5);
+        }
+
+        .input-group { display: flex; gap: 10px; }
+        #lispInput { 
+            flex: 1; padding: 15px; background: #0d1117; 
+            border: 1px solid var(--border); color: #fff; 
+            font-family: 'Consolas', monospace; font-size: 1.1rem; 
+            border-radius: 6px; 
+        }
+        #lispInput:focus { outline: 1px solid var(--accent); }
+        
+        button {
+            padding: 0 25px; border: none; border-radius: 6px; 
+            font-weight: bold; cursor: pointer; transition: 0.2s;
+        }
+        .btn-run { background: var(--accent); color: #000; }
+        .btn-run:hover { background: #e2caff; }
+        .btn-clear { background: #30363d; color: #fff; }
+
+        #vizCanvas {
+            flex: 1;
+            padding: 40px;
+            overflow: auto;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+        }
+
+        /* CONS CELL VISUALIZATION */
+        .cons-cell {
+            display: flex;
+            border: 2px solid var(--cons-box);
+            background: rgba(35, 134, 54, 0.1);
+            border-radius: 8px;
+            margin: 10px;
+            position: relative;
+            animation: popIn 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+        }
+        
+        .car-part, .cdr-part {
+            padding: 15px;
+            min-width: 60px;
+            text-align: center;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+        }
+        
+        .car-part { border-right: 2px dashed var(--cons-box); }
+        
+        .label-small { font-size: 0.7rem; color: #8b949e; margin-bottom: 5px; text-transform: uppercase; }
+        
+        .atom-val {
+            background: var(--atom-box);
+            color: white;
+            padding: 5px 10px;
+            border-radius: 4px;
+            font-weight: bold;
+            box-shadow: 0 2px 5px rgba(0,0,0,0.3);
+        }
+
+        .nil-val { color: #f85149; font-weight: bold; font-style: italic; }
+
+        /* ARROW CONNECTORS */
+        .cdr-part::after {
+            /* Simplification of pointer */
+            content: '➔';
+            position: absolute;
+            right: -25px;
+            top: 50%;
+            transform: translateY(-50%);
+            color: var(--cons-box);
+            font-size: 1.2rem;
+        }
+        .cons-cell:last-child .cdr-part::after { display: none; } /* Last one points to NIL usually inside */
+
+        /* --- RIGHT: LOGS & DOCS --- */
+        .sidebar-right {
+            background: var(--panel-bg);
+            border-left: 1px solid var(--border);
+            display: flex;
+            flex-direction: column;
+        }
+        
+        .docs-panel { flex: 1; padding: 20px; overflow-y: auto; }
+        .log-panel { 
+            height: 40%; background: #000; border-top: 2px solid var(--accent); 
+            padding: 10px; font-family: 'Consolas', monospace; font-size: 0.85rem; 
+            overflow-y: auto; color: var(--text-code);
+        }
+        .log-entry { margin-bottom: 5px; border-bottom: 1px dashed #333; padding-bottom: 2px; }
+        .log-res { color: var(--accent); font-weight: bold; }
+
+        @keyframes popIn { from { transform: scale(0.8); opacity: 0; } to { transform: scale(1); opacity: 1; } }
+
+    </style>
+</head>
+<body>
+
+    <aside class="sidebar-left">
+        <div class="lesson-block">
+            <h2>1. CÚ PHÁP CƠ BẢN</h2>
+            <p>Lisp sử dụng "Ký pháp Tiền tố" (Prefix notation). Hàm luôn đứng đầu, sau đó là các đối số.</p>
+            <h3>Cộng trừ nhân chia:</h3>
+            <div class="code-sample" onclick="setInput('(+ 2 3)')">(+ 2 3)</div>
+            <div class="code-sample" onclick="setInput('(* (+ 2 3) (- 7 2))')">(* (+ 2 3) (- 7 2))</div>
+            <p>Logic: (2+3) * (7-2) = 5 * 5 = 25</p>
+        </div>
+
+        <div class="lesson-block">
+            <h2>2. LIST FUNCTIONS</h2>
+            <p>Danh sách là cốt lõi của Lisp. Hãy xem cách `car` và `cdr` hoạt động.</p>
+            <h3>CAR (Lấy đầu):</h3>
+            <div class="code-sample" onclick="setInput('(car \'(A B C))')">(car '(A B C))</div>
+            <h3>CDR (Lấy đuôi):</h3>
+            <div class="code-sample" onclick="setInput('(cdr \'(A B C))')">(cdr '(A B C))</div>
+            <h3>CONS (Ghép nối):</h3>
+            <div class="code-sample" onclick="setInput('(cons \'A \'(B C))')">(cons 'A '(B C))</div>
+        </div>
+
+        <div class="lesson-block">
+            <h2>3. BIẾN & SETQ</h2>
+            <p>Gán giá trị cho biến bằng `setq`.</p>
+            <div class="code-sample" onclick="setInput('(setq x 10)')">(setq x 10)</div>
+            <div class="code-sample" onclick="setInput('(+ x 5)')">(+ x 5)</div>
+        </div>
+
+        <div class="lesson-block">
+            <h2>4. THỬ THÁCH</h2>
+            <p>Lấy phần tử thứ 2 của danh sách (A B C).</p>
+            <div class="code-sample" onclick="setInput('(car (cdr \'(A B C)))')">(car (cdr '(A B C)))</div>
+        </div>
+    </aside>
+
+    <main class="main-stage">
+        <div class="repl-container">
+            <div style="margin-bottom:5px; color:#8b949e; font-size:0.9rem">LISP REPL (Read-Eval-Print Loop)</div>
+            <div class="input-group">
+                <input type="text" id="lispInput" value="(cons 'A '(B C))" placeholder="Nhập code Lisp... VD: (+ 1 2)">
+                <button class="btn-run" onclick="runLisp()">RUN CODE</button>
+                <button class="btn-clear" onclick="clearLog()">CLEAR</button>
+            </div>
+            <div id="errorMsg" style="color:#f85149; margin-top:5px; font-size:0.9rem; display:none"></div>
+        </div>
+
+        <div id="vizCanvas">
+            <div style="text-align:center; color:#555; margin-top:50px">
+                <h3>VISUALIZER AREA</h3>
+                <p>Kết quả xử lý danh sách sẽ hiện dưới dạng đồ thị Cons Cell tại đây.</p>
+            </div>
+        </div>
+    </main>
+
+    <aside class="sidebar-right">
+        <div class="docs-panel">
+            <h2>TỪ ĐIỂN LISP</h2>
+            <div style="margin-bottom:15px">
+                <b style="color:var(--text-code)">CAR</b><br>
+                <span style="font-size:0.9rem; color:#8b949e">Trả về phần tử đầu tiên (Head).</span>
+            </div>
+            <div style="margin-bottom:15px">
+                <b style="color:var(--text-code)">CDR</b><br>
+                <span style="font-size:0.9rem; color:#8b949e">Trả về phần còn lại (Tail).</span>
+            </div>
+            <div style="margin-bottom:15px">
+                <b style="color:var(--text-code)">CONS</b><br>
+                <span style="font-size:0.9rem; color:#8b949e">Tạo ô nhớ mới, ghép item vào list.</span>
+            </div>
+            <div style="margin-bottom:15px">
+                <b style="color:var(--text-code)">' (Quote)</b><br>
+                <span style="font-size:0.9rem; color:#8b949e">Báo cho Lisp không đánh giá đoạn sau nó (dùng cho dữ liệu).</span>
+            </div>
+        </div>
+        <div class="log-panel" id="sysLog">
+            <div class="log-entry">> System Ready...</div>
+        </div>
+    </aside>
+
+    <script>
+        // --- MINI LISP INTERPRETER IN JS ---
+
+        // Môi trường biến toàn cục
+        const globalEnv = {};
+
+        function setInput(val) {
+            document.getElementById('lispInput').value = val;
+            runLisp();
+        }
+
+        function log(msg, type='info') {
+            const p = document.getElementById('sysLog');
+            const entry = document.createElement('div');
+            entry.className = 'log-entry';
+            if(type === 'res') entry.classList.add('log-res');
+            entry.innerText = msg;
+            p.prepend(entry);
+        }
+
+        function clearLog() {
+            document.getElementById('sysLog').innerHTML = '';
+            document.getElementById('vizCanvas').innerHTML = '';
+        }
+
+        // 1. TOKENIZER
+        function tokenize(input) {
+            return input.replace(/\(/g, ' ( ').replace(/\)/g, ' ) ').replace(/\'/g, " ' ").trim().split(/\s+/);
+        }
+
+        // 2. PARSER
+        function parse(tokens) {
+            if (tokens.length === 0) throw "Unexpected EOF";
+            const token = tokens.shift();
+            if (token === '(') {
+                const list = [];
+                while (tokens[0] !== ')') {
+                    list.push(parse(tokens));
+                }
+                tokens.shift(); // pop ')'
+                return list;
+            } else if (token === ')') {
+                throw "Unexpected )";
+            } else if (token === "'") {
+                return ['quote', parse(tokens)];
+            } else {
+                return atom(token);
+            }
+        }
+
+        function atom(token) {
+            const num = parseFloat(token);
+            if (!isNaN(num)) return num;
+            return token;
+        }
+
+        // 3. EVALUATOR
+        function evaluate(x, env) {
+            if (typeof x === 'string') {
+                // Variable lookup
+                return env[x] !== undefined ? env[x] : x; // Simple fallback to string literal if not found (for atoms like A, B)
+            } else if (typeof x === 'number') {
+                return x;
+            } else if (x[0] === 'quote') {
+                return x[1];
+            } else if (x[0] === 'setq') {
+                const val = evaluate(x[2], env);
+                env[x[1]] = val;
+                return val;
+            } else if (x[0] === '+') return evaluate(x[1], env) + evaluate(x[2], env);
+            else if (x[0] === '-') return evaluate(x[1], env) - evaluate(x[2], env);
+            else if (x[0] === '*') return evaluate(x[1], env) * evaluate(x[2], env);
+            else if (x[0] === '/') return evaluate(x[1], env) / evaluate(x[2], env);
+            else if (x[0] === 'car') {
+                const list = evaluate(x[1], env);
+                return Array.isArray(list) ? list[0] : null;
+            } else if (x[0] === 'cdr') {
+                const list = evaluate(x[1], env);
+                return Array.isArray(list) ? list.slice(1) : [];
+            } else if (x[0] === 'cons') {
+                const head = evaluate(x[1], env);
+                const tail = evaluate(x[2], env);
+                // In simple Lisp, cons creates a pair, but here we simplify to list manipulation
+                if (Array.isArray(tail)) return [head, ...tail];
+                return [head, tail];
+            } else if (x[0] === 'reverse') {
+                const list = evaluate(x[1], env);
+                return [...list].reverse();
+            } else {
+                // Function call (nested)
+                const func = evaluate(x[0], env);
+                // ... Simplification: we handle basic ops above.
+                // If it's a list (nested eval)
+                const exps = x.map(exp => evaluate(exp, env));
+                if(exps[0] === '+') return exps[1] + exps[2]; // Handle recursive arithmetic simply
+                return exps;
+            }
+            return null;
+        }
+
+        // --- VISUALIZER ---
+
+        function drawViz(data) {
+            const canvas = document.getElementById('vizCanvas');
+            canvas.innerHTML = '';
+
+            if (Array.isArray(data)) {
+                canvas.innerHTML += `<div style="margin-bottom:20px; color:#fff">Kết quả: Danh sách (List)</div>`;
+                const container = document.createElement('div');
+                container.style.display = 'flex';
+                container.style.flexWrap = 'wrap';
+                
+                // Draw linked list style
+                // [CAR | CDR] -> [CAR | CDR] -> NIL
+                data.forEach((item, index) => {
+                    const cell = document.createElement('div');
+                    cell.className = 'cons-cell';
+                    
+                    // CAR part
+                    let carContent = item;
+                    if(Array.isArray(item)) carContent = "(List...)"; // Simplify nested
+                    
+                    cell.innerHTML = `
+                        <div class="car-part">
+                            <div class="label-small">CAR</div>
+                            <div class="atom-val">${carContent}</div>
+                        </div>
+                        <div class="cdr-part">
+                            <div class="label-small">CDR</div>
+                        </div>
+                    `;
+                    container.appendChild(cell);
+                });
+
+                // Add NIL at the end
+                const nilCell = document.createElement('div');
+                nilCell.className = 'cons-cell';
+                nilCell.style.border = '2px dashed #555';
+                nilCell.style.background = 'transparent';
+                nilCell.innerHTML = `<div class="car-part" style="border:none"><div class="nil-val">NIL</div></div>`;
+                container.appendChild(nilCell);
+
+                canvas.appendChild(container);
+            } else {
+                // Atomic value
+                canvas.innerHTML += `<div style="margin-bottom:20px; color:#fff">Kết quả: Nguyên tử (Atom)</div>`;
+                canvas.innerHTML += `<div class="atom-val" style="font-size:2rem">${data}</div>`;
+            }
+        }
+
+        // --- MAIN RUN ---
+
+        function runLisp() {
+            const input = document.getElementById('lispInput').value;
+            const errDiv = document.getElementById('errorMsg');
+            errDiv.style.display = 'none';
+
+            if(!input.trim()) return;
+
+            log(`> ${input}`);
+
+            try {
+                const tokens = tokenize(input);
+                const ast = parse(tokens);
+                const result = evaluate(ast, globalEnv);
+                
+                // Format output
+                let outputStr = result;
+                if(Array.isArray(result)) {
+                    outputStr = "(" + result.join(" ") + ")";
+                }
+
+                log(`=> ${outputStr}`, 'res');
+                drawViz(result);
+
+            } catch (e) {
+                console.error(e);
+                errDiv.innerText = "Lỗi cú pháp: " + e;
+                errDiv.style.display = 'block';
+                log("ERROR: " + e);
+            }
+        }
+    </script>
+</body>
+</html>

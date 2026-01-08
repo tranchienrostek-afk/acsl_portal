@@ -1,0 +1,367 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>BitFlow Edu Pro - Ultimate Fixed</title>
+    <style>
+        :root {
+            --bg-dark: #0d1117;
+            --panel-bg: #161b22;
+            --border: #30363d;
+            --accent: #2f81f7;
+            --text-main: #c9d1d9;
+            --text-muted: #8b949e;
+            --bit-1: #2ea043;
+            --bit-0: #30363d;
+            --op-tag: #a371f7;
+            --flow-line: #58a6ff;
+        }
+
+        * { box-sizing: border-box; }
+
+        body {
+            margin: 0;
+            font-family: 'Segoe UI', 'Consolas', monospace;
+            background-color: var(--bg-dark);
+            color: var(--text-main);
+            height: 100vh;
+            display: grid;
+            grid-template-columns: 300px 1fr 350px;
+            overflow: hidden;
+        }
+
+        /* SIDEBAR LEFT */
+        .sidebar-left {
+            background: var(--panel-bg);
+            border-right: 1px solid var(--border);
+            padding: 20px;
+            display: flex;
+            flex-direction: column;
+            gap: 15px;
+            overflow-y: auto;
+        }
+        h2 { font-size: 1.1rem; text-transform: uppercase; color: var(--accent); border-bottom: 2px solid var(--border); padding-bottom: 10px; margin-top: 0; }
+        .var-card { background: #21262d; border: 1px solid var(--border); padding: 10px; border-radius: 6px; position: relative; }
+        .var-header { display: flex; justify-content: space-between; margin-bottom: 5px; }
+        .var-name { font-weight: bold; color: var(--op-tag); }
+        .btn-del { color: #f85149; cursor: pointer; background: none; border: none; font-weight: bold; }
+        input.bit-input { width: 100%; background: #0d1117; border: 1px solid var(--border); color: #fff; padding: 8px; font-family: monospace; letter-spacing: 2px; border-radius: 4px; }
+        .btn-add { width: 100%; padding: 10px; background: #238636; color: white; border: none; border-radius: 6px; cursor: pointer; font-weight: bold; }
+
+        /* MAIN STAGE */
+        .main-stage {
+            position: relative;
+            display: flex;
+            flex-direction: column;
+            background-image: radial-gradient(#30363d 1px, transparent 1px);
+            background-size: 20px 20px;
+            overflow-y: auto;
+            padding: 20px;
+            align-items: center;
+        }
+        .control-bar {
+            position: sticky; top: 0; z-index: 100; width: 100%; max-width: 900px;
+            background: rgba(13, 17, 23, 0.95); backdrop-filter: blur(10px);
+            padding: 15px; border: 1px solid var(--border); border-radius: 8px;
+            display: flex; gap: 10px; box-shadow: 0 10px 30px rgba(0,0,0,0.5);
+        }
+        #exprInput { flex: 1; padding: 12px; background: #0d1117; border: 1px solid var(--border); color: #58a6ff; font-weight:bold; font-size: 1.1rem; border-radius: 4px; font-family: monospace; }
+        #btnRun { padding: 0 30px; background: var(--accent); color: white; border: none; border-radius: 4px; font-weight: bold; cursor: pointer; }
+        
+        /* FLOW NODES */
+        .flow-container {
+            margin-top: 40px; width: 100%; max-width: 700px;
+            display: flex; flex-direction: column; align-items: center; gap: 40px; padding-bottom: 100px;
+        }
+        .flow-node {
+            background: #161b22; border: 1px solid var(--border); border-radius: 10px; padding: 20px; width: 100%; position: relative;
+            animation: slideUp 0.5s ease; box-shadow: 0 4px 20px rgba(0,0,0,0.3);
+        }
+        .flow-node::before {
+            content: ''; position: absolute; top: -42px; left: 50%; width: 2px; height: 40px; background: var(--flow-line); opacity: 0.5;
+        }
+        .flow-node:first-child::before { display: none; }
+        .node-header {
+            position: absolute; top: -12px; left: 20px; background: var(--op-tag); color: white; padding: 2px 12px; border-radius: 12px; font-size: 0.8rem; font-weight: bold;
+        }
+        .bit-vis-row { display: flex; align-items: center; margin-bottom: 8px; font-family: monospace; }
+        .bit-label { width: 120px; color: var(--text-muted); font-size: 0.9rem; text-align: right; margin-right: 15px; overflow:hidden; text-overflow:ellipsis; white-space:nowrap; }
+        .bits-wrapper { display: flex; gap: 4px; }
+        .bit-box { width: 30px; height: 30px; display: flex; align-items: center; justify-content: center; border-radius: 4px; font-weight: bold; background: var(--bit-0); }
+        .bit-box.one { background: var(--bit-1); color: white; box-shadow: 0 0 5px var(--bit-1); }
+        .divider { height: 1px; background: var(--border); margin: 10px 0; width: 100%; }
+        .node-footer { text-align: center; font-size: 0.8rem; color: #58a6ff; margin-top: 10px; font-style: italic; }
+
+        /* SIDEBAR RIGHT */
+        .sidebar-right { background: var(--panel-bg); border-left: 1px solid var(--border); display: flex; flex-direction: column; }
+        .docs-panel { padding: 20px; flex: 1; overflow-y: auto; border-bottom: 1px solid var(--border); }
+        .logs-panel { height: 300px; background: #000; padding: 10px; overflow-y: auto; font-family: 'Consolas', monospace; font-size: 0.85rem; color: #2ea043; border-top: 2px solid var(--accent); }
+        .log-entry { margin-bottom: 4px; border-bottom: 1px dashed #333; padding-bottom: 2px; }
+        .log-time { color: #8b949e; margin-right: 10px; }
+
+        @keyframes slideUp { from { opacity: 0; transform: translateY(20px); } to { opacity: 1; transform: translateY(0); } }
+    </style>
+</head>
+<body>
+    <aside class="sidebar-left">
+        <h2>1. INPUT DATA</h2>
+        <div id="varsContainer"></div>
+        <button class="btn-add" onclick="addNewVar()">+ THÊM BIẾN</button>
+    </aside>
+
+    <main class="main-stage">
+        <div class="control-bar">
+            <input type="text" id="exprInput" value="LCIRC-2 (RCIRC-4 C OR LSHIFT-1 A AND NOT B)" placeholder="VD: LCIRC-2 (A AND B)">
+            <button id="btnRun" onclick="runFlow()">CHẠY & PHÂN TÍCH</button>
+        </div>
+        <div id="flowCanvas" class="flow-container">
+            <div style="text-align:center; color: #8b949e; margin-top: 50px;">
+                Hệ thống sẵn sàng.<br>Hỗ trợ ngoặc lồng nhau ( Nested Parentheses )
+            </div>
+        </div>
+    </main>
+
+    <aside class="sidebar-right">
+        <div class="docs-panel">
+            <h2>2. HƯỚNG DẪN</h2>
+            <div style="font-size:0.9rem; color:#8b949e; margin-bottom:15px">
+                Thứ tự ưu tiên (Precedence):<br>
+                1. <b>( )</b> : Ngoặc<br>
+                2. <b>NOT, SHIFT, CIRC</b> : Đảo/Dịch/Xoay<br>
+                3. <b>AND</b><br>
+                4. <b>XOR</b><br>
+                5. <b>OR</b>
+            </div>
+            <div style="font-size:0.9rem; line-height:1.5">
+                Cú pháp đặc biệt:<br>
+                - <b>LCIRC-2 (...)</b>: Xoay trái 2 bit kết quả trong ngoặc.<br>
+                - <b>NOT (...)</b>: Đảo ngược kết quả trong ngoặc.
+            </div>
+        </div>
+        <div class="logs-panel" id="sysLog"></div>
+    </aside>
+
+    <script>
+        // --- DATA ---
+        let variables = [
+            { name: 'A', val: '10110' },
+            { name: 'B', val: '00111' },
+            { name: 'C', val: '11111' }
+        ];
+
+        // --- UI HELPERS ---
+        function renderVars() {
+            const c = document.getElementById('varsContainer');
+            c.innerHTML = '';
+            variables.forEach((v, i) => {
+                c.innerHTML += `
+                    <div class="var-card">
+                        <div class="var-header"><span class="var-name">${v.name}</span><button class="btn-del" onclick="removeVar(${i})">×</button></div>
+                        <input class="bit-input" value="${v.val}" oninput="updateVar(${i}, this.value)">
+                    </div>`;
+            });
+        }
+        function addNewVar() {
+            const used = variables.map(v => v.name);
+            let code = 65;
+            while(used.includes(String.fromCharCode(code))) code++;
+            variables.push({ name: String.fromCharCode(code), val: '00000' });
+            renderVars();
+        }
+        function removeVar(i) { variables.splice(i,1); renderVars(); }
+        function updateVar(i, v) { variables[i].val = v.replace(/[^01]/g,''); }
+        function writeLog(msg) {
+            const p = document.getElementById('sysLog');
+            const t = new Date().toLocaleTimeString('vi-VN', { hour12:false, fractionalSecondDigits: 2 });
+            p.innerHTML = `<div class="log-entry"><span class="log-time">[${t}]</span> ${msg}</div>` + p.innerHTML;
+        }
+
+        // --- LOGIC ENGINE ---
+        function padBits(a, b) {
+            const l = Math.max(a.length, b.length);
+            return [a.padStart(l,'0'), b.padStart(l,'0')];
+        }
+        function createBitsHTML(b) {
+            return b.split('').map(x => `<div class="bit-box ${x==='1'?'one':''}">${x}</div>`).join('');
+        }
+
+        async function createNode(title, inputs, res, desc) {
+            const c = document.getElementById('flowCanvas');
+            const div = document.createElement('div');
+            div.className = 'flow-node';
+            let html = `<div class="node-header">${title}</div>`;
+            inputs.forEach(i => {
+                html += `<div class="bit-vis-row"><div class="bit-label">${i.lbl}</div><div class="bits-wrapper">${createBitsHTML(i.val)}</div></div>`;
+            });
+            html += `<div class="divider"></div>`;
+            html += `<div class="bit-vis-row"><div class="bit-label" style="color:var(--accent)">KẾT QUẢ</div><div class="bits-wrapper">${createBitsHTML(res)}</div></div>`;
+            html += `<div class="node-footer">${desc}</div>`;
+            div.innerHTML = html;
+            c.appendChild(div);
+            div.scrollIntoView({ behavior: 'smooth', block: 'center' });
+            await new Promise(r => setTimeout(r, 600)); // Delay animation
+        }
+
+        // --- IMPROVED PARSER (FIXED NESTING) ---
+        const OPERATORS = {
+            'NOT': { prec: 4, type: 'unary' },
+            'LCIRC': { prec: 4, type: 'unary_arg' }, // High precedence
+            'RCIRC': { prec: 4, type: 'unary_arg' },
+            'LSHIFT': { prec: 4, type: 'unary_arg' },
+            'RSHIFT': { prec: 4, type: 'unary_arg' },
+            'AND': { prec: 2, type: 'binary' },
+            'XOR': { prec: 1, type: 'binary' },
+            'OR': { prec: 0, type: 'binary' }
+        };
+
+        const BitMath = {
+            AND: (a, b) => a.split('').map((c, i) => (c === '1' && b[i] === '1') ? '1' : '0').join(''),
+            OR: (a, b) => a.split('').map((c, i) => (c === '1' || b[i] === '1') ? '1' : '0').join(''),
+            XOR: (a, b) => a.split('').map((c, i) => c !== b[i] ? '1' : '0').join(''),
+            NOT: (a) => a.split('').map(c => c === '1' ? '0' : '1').join(''),
+            LSHIFT: (a, n) => (a.substring(n) + '0'.repeat(n)).substring(0, a.length),
+            RSHIFT: (a, n) => ('0'.repeat(n) + a.substring(0, a.length - n)),
+            LCIRC: (a, n) => { const s = n % a.length; return a.substring(s) + a.substring(0, s); },
+            RCIRC: (a, n) => { const s = n % a.length; return a.substring(a.length - s) + a.substring(0, a.length - s); }
+        };
+
+        function tokenize(expr) {
+            // Thêm khoảng trắng quanh ngoặc để tách token chuẩn
+            expr = expr.replace(/\(/g, ' ( ').replace(/\)/g, ' ) ').toUpperCase();
+            // Xử lý các dấu - thành space nếu người dùng lỡ tay, trừ trường hợp LSHIFT-2
+            return expr.split(/\s+/).filter(t => t);
+        }
+
+        function toRPN(tokens) {
+            let out = [], stack = [];
+            tokens.forEach(t => {
+                // Case 1: Các phép toán có tham số như LCIRC-2
+                if (t.match(/^(LSHIFT|RSHIFT|LCIRC|RCIRC)-(\d+)$/)) {
+                    // Push vào stack như một Operator có độ ưu tiên cao
+                    stack.push({ type: 'OP_ARG', val: t });
+                }
+                // Case 2: Biến hoặc số
+                else if (variables.find(v => v.name === t) || t.match(/^[01]+$/)) {
+                    out.push({ type: 'VAL', val: t });
+                }
+                // Case 3: Operators thường
+                else if (OPERATORS[t]) {
+                    while (stack.length && stack[stack.length-1].val !== '(' && 
+                           // Check precedence. OP_ARG coi như prec=4
+                           (stack[stack.length-1].type === 'OP_ARG' || OPERATORS[stack[stack.length-1].val]?.prec >= OPERATORS[t].prec)) {
+                        out.push(stack.pop());
+                    }
+                    stack.push({ type: 'OP', val: t });
+                }
+                else if (t === '(') {
+                    stack.push({ type: 'PAREN', val: t });
+                }
+                else if (t === ')') {
+                    while (stack.length && stack[stack.length-1].val !== '(') {
+                        out.push(stack.pop());
+                    }
+                    stack.pop(); // Pop '('
+                    
+                    // KEY FIX: Sau khi đóng ngoặc, nếu đỉnh stack là 1 hàm (như LCIRC-2), 
+                    // nghĩa là hàm đó đang chờ kết quả của cái ngoặc này. Pop nó ra luôn.
+                    if (stack.length && stack[stack.length-1].type === 'OP_ARG') {
+                        out.push(stack.pop());
+                    }
+                }
+            });
+            while (stack.length) out.push(stack.pop());
+            return out;
+        }
+
+        async function runFlow() {
+            const input = document.getElementById('exprInput').value;
+            const canvas = document.getElementById('flowCanvas');
+            if(!input.trim()) return;
+
+            canvas.innerHTML = '';
+            writeLog(`BẮT ĐẦU: ${input}`);
+
+            try {
+                const tokens = tokenize(input);
+                const queue = toRPN(tokens);
+                let stack = [];
+
+                const getVal = (t) => {
+                    const v = variables.find(x => x.name === t);
+                    if(v) {
+                        writeLog(`Lấy biến ${t}: ${v.val}`);
+                        return { val: v.val, lbl: t };
+                    }
+                    return { val: t, lbl: 'RAW' };
+                };
+
+                for(let item of queue) {
+                    if(item.type === 'VAL') {
+                        stack.push(getVal(item.val));
+                    }
+                    else if(item.type === 'OP_ARG') {
+                        // Xử lý LSHIFT-2
+                        const parts = item.val.split('-');
+                        const op = parts[0];
+                        const arg = parseInt(parts[1]);
+                        const operand = stack.pop();
+
+                        const res = BitMath[op](operand.val, arg);
+                        writeLog(`Tính ${op} ${arg} cho [${operand.lbl}]`);
+                        
+                        await createNode(
+                            `${op} ${arg}`, 
+                            [operand], 
+                            res, 
+                            `Áp dụng lên nhóm/biến: ${operand.lbl}`
+                        );
+                        stack.push({ val: res, lbl: `(${op}-${arg} ...)` });
+                    }
+                    else if(item.type === 'OP') {
+                        const op = item.val;
+                        if(op === 'NOT') {
+                            const operand = stack.pop();
+                            const res = BitMath.NOT(operand.val);
+                            writeLog(`Tính NOT [${operand.lbl}]`);
+                            await createNode('NOT', [operand], res, `Đảo bit của ${operand.lbl}`);
+                            stack.push({ val: res, lbl: `(NOT ...)` });
+                        } else {
+                            const b = stack.pop();
+                            const a = stack.pop();
+                            const [pa, pb] = padBits(a.val, b.val);
+                            const res = BitMath[op](pa, pb);
+                            writeLog(`Tính [${a.lbl}] ${op} [${b.lbl}]`);
+                            await createNode(op, 
+                                [{lbl: a.lbl, val: pa}, {lbl: b.lbl, val: pb}], 
+                                res, 
+                                `Kết hợp hai kết quả trung gian`
+                            );
+                            stack.push({ val: res, lbl: `(${op} ...)` });
+                        }
+                    }
+                }
+
+                if(stack.length === 1) {
+                    const final = stack.pop();
+                    const finDiv = document.createElement('div');
+                    finDiv.style = "background:#2ea043; color:white; padding:20px; border-radius:10px; font-size:1.2rem; font-weight:bold; box-shadow:0 0 20px #2ea043; text-align:center";
+                    finDiv.innerHTML = `KẾT QUẢ CUỐI CÙNG: ${final.val}`;
+                    canvas.appendChild(finDiv);
+                    finDiv.scrollIntoView({behavior:'smooth'});
+                    writeLog(`HOÀN THÀNH. Kết quả: ${final.val}`);
+                } else {
+                    throw new Error("Lỗi stack (Biểu thức không cân bằng)");
+                }
+
+            } catch(e) {
+                console.error(e);
+                writeLog(`ERROR: ${e.message}`);
+                alert("Lỗi cú pháp! Kiểm tra kỹ các dấu ngoặc đóng mở.");
+            }
+        }
+
+        renderVars();
+    </script>
+</body>
+</html>

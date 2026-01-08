@@ -1,0 +1,211 @@
+<!DOCTYPE html>
+<html lang="vi">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Bài tập Boolean Algebra - ACSL</title>
+    <link
+        href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;800&family=JetBrains+Mono:wght@400;700&display=swap"
+        rel="stylesheet">
+    <script>window.MathJax = { tex: { inlineMath: [['$', '$']] } };</script>
+    <script async src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-mml-chtml.js"></script>
+    <style>
+        :root {
+            --bg: #0f172a;
+            --card: rgba(30, 41, 59, 0.8);
+            --accent: #f59e0b;
+            --text: #f1f5f9;
+            --dim: #94a3b8;
+            --correct: #22c55e;
+            --wrong: #ef4444;
+        }
+
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Inter', sans-serif;
+            background: var(--bg);
+            color: var(--text);
+            padding: 30px 15px;
+        }
+
+        .container {
+            max-width: 850px;
+            margin: 0 auto;
+        }
+
+        header {
+            text-align: center;
+            margin-bottom: 40px;
+        }
+
+        h1 {
+            font-size: 2rem;
+            background: linear-gradient(to right, #f59e0b, #ef4444);
+            -webkit-background-clip: text;
+            background-clip: text;
+            -webkit-text-fill-color: transparent;
+        }
+
+        .quiz-card {
+            background: var(--card);
+            border-radius: 16px;
+            padding: 25px;
+            margin-bottom: 25px;
+            border-left: 4px solid var(--accent);
+        }
+
+        .q-num {
+            color: var(--accent);
+            font-weight: 800;
+            font-size: 0.9rem;
+            margin-bottom: 10px;
+        }
+
+        .q-text {
+            margin-bottom: 15px;
+            line-height: 1.7;
+        }
+
+        .code {
+            font-family: 'JetBrains Mono', monospace;
+            background: #000;
+            padding: 12px;
+            border-radius: 8px;
+            margin: 10px 0;
+            font-size: 1rem;
+        }
+
+        .options {
+            display: grid;
+            gap: 10px;
+        }
+
+        .opt-btn {
+            padding: 12px 15px;
+            background: rgba(255, 255, 255, 0.05);
+            border: 2px solid rgba(255, 255, 255, 0.1);
+            border-radius: 10px;
+            cursor: pointer;
+            text-align: left;
+            color: var(--text);
+            font-size: 0.95rem;
+            transition: 0.2s;
+        }
+
+        .opt-btn:hover:not(:disabled) {
+            background: rgba(245, 158, 11, 0.1);
+            border-color: var(--accent);
+        }
+
+        .opt-btn.correct {
+            background: rgba(34, 197, 94, 0.2);
+            border-color: var(--correct);
+        }
+
+        .opt-btn.wrong {
+            background: rgba(239, 68, 68, 0.2);
+            border-color: var(--wrong);
+        }
+
+        .opt-btn:disabled {
+            cursor: default;
+        }
+
+        .explain {
+            display: none;
+            margin-top: 15px;
+            padding: 15px;
+            background: rgba(245, 158, 11, 0.1);
+            border-radius: 10px;
+            border-left: 3px solid var(--accent);
+            font-size: 0.9rem;
+        }
+
+        .explain.show {
+            display: block;
+        }
+
+        .score-bar {
+            position: fixed;
+            bottom: 20px;
+            right: 20px;
+            background: #1e293b;
+            padding: 12px 25px;
+            border-radius: 50px;
+            font-weight: 700;
+        }
+    </style>
+</head>
+
+<body>
+    <div class="container">
+        <header>
+            <h1>📝 Bài tập Boolean Algebra - ACSL</h1>
+            <p style="color: var(--dim); margin-top: 8px;">Luyện tập các phép toán và đẳng thức Boolean</p>
+        </header>
+        <div id="quiz"></div>
+        <div class="score-bar">Điểm: <span id="score">0</span> / <span id="total">12</span></div>
+    </div>
+
+    <script>
+        const questions = [
+            { q: "Tính: 1 AND 0", code: "1 · 0", options: ["0", "1"], answer: 0, explain: "AND chỉ trả về 1 khi cả hai đều là 1. 1 · 0 = 0" },
+            { q: "Tính: 1 OR 0", code: "1 + 0", options: ["0", "1"], answer: 1, explain: "OR trả về 1 khi ít nhất một trong hai là 1. 1 + 0 = 1" },
+            { q: "Tính: NOT 1", code: "1̄", options: ["0", "1"], answer: 0, explain: "NOT đảo ngược giá trị. NOT 1 = 0" },
+            { q: "Tính: 1 XOR 1", code: "1 ⊕ 1", options: ["0", "1"], answer: 0, explain: "XOR trả về 1 khi hai giá trị khác nhau. 1 ⊕ 1 = 0" },
+            { q: "Tính: 0 XNOR 0", code: "0 ⊙ 0", options: ["0", "1"], answer: 1, explain: "XNOR trả về 1 khi hai giá trị giống nhau. 0 ⊙ 0 = 1" },
+            { q: "Theo thứ tự ưu tiên, phép nào thực hiện trước?", code: "A + B · C", options: ["OR (+)", "AND (·)"], answer: 1, explain: "Thứ tự: NOT → AND → XOR/XNOR → OR. Vậy AND thực hiện trước." },
+            { q: "Rút gọn: A + A·B", code: "A + A·B", options: ["A", "AB", "A + B", "B"], answer: 0, explain: "Theo đẳng thức hấp thụ: A + AB = A" },
+            { q: "Rút gọn: A · (A + B)", code: "A · (A + B)", options: ["A", "AB", "A + B", "B"], answer: 0, explain: "Theo đẳng thức hấp thụ: A(A + B) = A" },
+            { q: "Rút gọn: A + Ā·B", code: "A + Ā·B", options: ["A", "A + B", "B", "AB"], answer: 1, explain: "Theo đẳng thức: A + ĀB = A + B" },
+            { q: "Với A=1, B=0, tính: A·B̄ + Ā·B", code: "A·B̄ + Ā·B (A=1, B=0)", options: ["0", "1"], answer: 1, explain: "1·1 + 0·0 = 1 + 0 = 1 (Đây là biểu thức XOR)" },
+            { q: "Đẳng thức De Morgan: NOT(A AND B) = ?", code: "A·B̄̄ = ?", options: ["Ā + B̄", "Ā · B̄", "A + B", "A · B"], answer: 0, explain: "De Morgan: NOT(A·B) = Ā + B̄" },
+            { q: "Đẳng thức De Morgan: NOT(A OR B) = ?", code: "A+B̄̄ = ?", options: ["Ā + B̄", "Ā · B̄", "A + B", "A · B"], answer: 1, explain: "De Morgan: NOT(A+B) = Ā · B̄" }
+        ];
+
+        let score = 0;
+        const container = document.getElementById('quiz');
+
+        questions.forEach((q, i) => {
+            const card = document.createElement('div');
+            card.className = 'quiz-card';
+            card.innerHTML = `
+        <div class="q-num">Câu ${i + 1}</div>
+        <div class="q-text">${q.q}</div>
+        <div class="code">${q.code}</div>
+        <div class="options" id="opts-${i}">
+            ${q.options.map((opt, j) => `<button class="opt-btn" data-q="${i}" data-opt="${j}">${opt}</button>`).join('')}
+        </div>
+        <div class="explain" id="exp-${i}">${q.explain}</div>
+    `;
+            container.appendChild(card);
+        });
+
+        document.querySelectorAll('.opt-btn').forEach(btn => {
+            btn.onclick = () => {
+                const qIdx = parseInt(btn.dataset.q);
+                const optIdx = parseInt(btn.dataset.opt);
+                const q = questions[qIdx];
+                const opts = document.querySelectorAll(`#opts-${qIdx} .opt-btn`);
+                if (opts[0].disabled) return;
+                opts.forEach((o, i) => {
+                    o.disabled = true;
+                    if (i === q.answer) o.classList.add('correct');
+                    if (i === optIdx && i !== q.answer) o.classList.add('wrong');
+                });
+                if (optIdx === q.answer) { score++; document.getElementById('score').innerText = score; }
+                document.getElementById(`exp-${qIdx}`).classList.add('show');
+            };
+        });
+
+        document.getElementById('total').innerText = questions.length;
+    </script>
+</body>
+
+</html>

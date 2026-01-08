@@ -1,0 +1,141 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+    <meta charset="UTF-8">
+    <title>Đề thi ACSL - What Does This Program Do?</title>
+    <style>
+        body {
+            font-family: Arial, Helvetica, sans-serif;
+            line-height: 1.6;
+            margin: 40px;
+        }
+        h1, h2 {
+            color: #003366;
+        }
+        pre {
+            background: #f4f4f4;
+            padding: 12px;
+            border-left: 4px solid #003366;
+            overflow-x: auto;
+        }
+        .question {
+            margin-bottom: 40px;
+        }
+        .note {
+            background: #eef6ff;
+            padding: 12px;
+            border-left: 4px solid #3399ff;
+            margin-top: 10px;
+        }
+    </style>
+</head>
+<body>
+
+<h1>ĐỀ THI ACSL</h1>
+<h2>What Does This Program Do?</h2>
+
+<p><strong>Hướng dẫn:</strong> Đọc kỹ chương trình giả (pseudocode ACSL) và xác định kết quả hoặc chức năng của chương trình.</p>
+
+<div class="question">
+<h3>Câu 1</h3>
+<p>Đầu vào: <code>h = 50</code>, <code>r = 10</code></p>
+<pre>
+input h, r
+b = 0
+if h > 48 then
+    b = b + (h - 48) * 2 * r
+    h = 48
+end if
+if h > 40 then
+   b = b + (h - 40) * (3/2) * r
+   h = 40
+end if
+b = b + h * r
+output b
+</pre>
+</div>
+
+<div class="question">
+<h3>Câu 2</h3>
+<pre>
+a = "BANANAS"
+num = 0; t = ""
+for j = len(a)-1 to 0 step -1
+     t = t + a[j]
+next j
+for j = 0 to len(a) - 1
+    if a[j] == t[j] then
+       num = num + 1
+    end if
+next j
+output num
+</pre>
+</div>
+
+<div class="question">
+<h3>Câu 3</h3>
+<pre>
+A = [12, 41, 52, 57, 77, -100]
+B = [17, 34, 81]
+j = 0; k = 0; n = 0
+while A(k) > 0
+  while B(k) <= A(j)
+    C(n) = B(k)
+    n = n + 1
+    k = k + 1
+  end while
+  C(n) = A(j)
+  n = n + 1
+  j = j + 1
+end while
+C(n) = B(k)
+output C(4)
+</pre>
+</div>
+
+<div class="question">
+<h3>Câu 4</h3>
+<pre>
+C = 0; S = 0
+FOR I = 1 TO 50
+  IF I / 2 = INT(I / 2) THEN
+     C = C + 1
+  ELSE
+     S = S + 1
+  END IF
+NEXT I
+PRINT C, S
+</pre>
+</div>
+
+<div class="question">
+<h3>Câu 5</h3>
+<pre>
+a = 12: b = 1: c = 0: d = 4: e = 2
+IF a > d THEN a = a - d
+IF (d - b) < (e - a) THEN d = d + e
+IF a * b == d * e THEN
+   e = a * b / e
+ELSE
+   d = d * e / a
+END IF
+IF d ^ 2 <= (b + 1) ^ 2 THEN
+   d = b + 1
+ELSE
+   b = b + 1
+END IF
+IF a + b * c == d + e * c THEN
+   a = b * c
+ELSE
+   d = e * c
+END IF
+output (a + e) / b + (d + c) ^ b * c
+</pre>
+</div>
+
+<div class="note">
+<p><strong>Lưu ý:</strong> Toán tử <code>^</code> hoặc <code>↑</code> biểu diễn lũy thừa trong ACSL.</p>
+</div>
+
+</body>
+</html>

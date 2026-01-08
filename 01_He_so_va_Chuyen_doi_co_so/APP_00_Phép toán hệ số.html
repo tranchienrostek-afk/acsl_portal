@@ -1,0 +1,478 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Base Math Architect - Ultimate Edition</title>
+    <style>
+        :root {
+            --bg: #101014;
+            --panel: #1b1b26;
+            --primary: #7c3aed; /* Violet */
+            --accent: #06b6d4; /* Cyan */
+            --text-main: #e2e8f0;
+            --text-muted: #94a3b8;
+            --borrow-col: #f43f5e; /* Red for borrow */
+            --carry-col: #10b981; /* Green for carry */
+            --border: #2d2d3b;
+        }
+
+        * { box-sizing: border-box; }
+
+        body {
+            background-color: var(--bg);
+            color: var(--text-main);
+            font-family: 'Segoe UI', 'Consolas', monospace;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            min-height: 100vh;
+            margin: 0;
+            padding: 20px;
+        }
+
+        h1 {
+            text-transform: uppercase;
+            letter-spacing: 2px;
+            color: var(--primary);
+            margin-bottom: 20px;
+            text-shadow: 0 0 15px rgba(124, 58, 237, 0.4);
+        }
+
+        /* INPUT AREA */
+        .controls {
+            background: var(--panel);
+            padding: 20px;
+            border-radius: 12px;
+            border: 1px solid var(--border);
+            display: flex;
+            gap: 15px;
+            flex-wrap: wrap;
+            justify-content: center;
+            box-shadow: 0 10px 30px rgba(0,0,0,0.5);
+            max-width: 900px;
+            width: 100%;
+            z-index: 10;
+        }
+
+        .input-grp { display: flex; flex-direction: column; gap: 5px; }
+        label { font-size: 0.8rem; color: var(--text-muted); font-weight: bold; }
+        
+        input, select {
+            background: #0f0f13;
+            border: 1px solid #3f3f4e;
+            color: #fff;
+            padding: 12px;
+            border-radius: 6px;
+            font-family: 'Consolas', monospace;
+            font-size: 1.1rem;
+            outline: none;
+        }
+        input:focus { border-color: var(--accent); }
+
+        button {
+            background: var(--primary);
+            color: white;
+            border: none;
+            padding: 0 30px;
+            border-radius: 6px;
+            font-weight: bold;
+            cursor: pointer;
+            transition: 0.2s;
+            margin-top: 20px;
+            height: 46px;
+        }
+        button:hover { background: #8b5cf6; box-shadow: 0 0 15px var(--primary); }
+
+        /* MAIN STAGE */
+        .stage-container {
+            display: flex;
+            gap: 20px;
+            margin-top: 30px;
+            width: 100%;
+            max-width: 1100px;
+            align-items: flex-start;
+        }
+
+        /* BOARD (Left) */
+        .board {
+            flex: 2;
+            background: var(--panel);
+            border: 1px solid var(--border);
+            border-radius: 12px;
+            padding: 40px;
+            display: flex;
+            justify-content: center;
+            min-height: 400px;
+            position: relative;
+            overflow-x: auto;
+        }
+
+        /* LOGS (Right) */
+        .log-panel {
+            flex: 1;
+            background: #000;
+            border: 1px solid var(--border);
+            border-radius: 12px;
+            height: 400px;
+            padding: 15px;
+            overflow-y: auto;
+            font-family: 'Consolas', monospace;
+            font-size: 0.9rem;
+            color: var(--accent);
+        }
+        .log-entry { margin-bottom: 8px; border-bottom: 1px dashed #333; padding-bottom: 5px; }
+        .log-step { color: var(--text-muted); margin-right: 5px; }
+        .log-detail { color: #fff; }
+
+        /* CALCULATION GRID CSS */
+        .calc-grid {
+            display: grid;
+            /* Columns defined dynamically in JS */
+            gap: 5px;
+            font-family: 'Consolas', monospace;
+            font-size: 2rem;
+            font-weight: bold;
+            text-align: center;
+        }
+
+        .cell {
+            width: 50px;
+            height: 60px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            border-radius: 4px;
+            position: relative;
+        }
+
+        .cell.carry { font-size: 1rem; color: var(--carry-col); align-items: flex-end; padding-bottom: 5px; }
+        .cell.borrow { font-size: 1rem; color: var(--borrow-col); align-items: flex-end; padding-bottom: 5px; }
+        .cell.op-symbol { color: var(--accent); }
+        .cell.result { border-top: 2px solid var(--text-main); color: var(--accent); margin-top: 5px; }
+        .cell.active { background: rgba(255, 255, 255, 0.1); border: 1px solid rgba(255, 255, 255, 0.3); }
+
+        /* Highlight animation */
+        @keyframes flash { 0% { background: var(--accent); color: black; } 100% { background: transparent; color: inherit; } }
+        .highlight { animation: flash 1s ease; }
+
+        @media (max-width: 800px) {
+            .stage-container { flex-direction: column; }
+            .board, .log-panel { width: 100%; }
+        }
+    </style>
+</head>
+<body>
+
+    <h1>Base Math <span style="color:var(--accent)">Architect</span></h1>
+
+    <div class="controls">
+        <div class="input-grp">
+            <label>Số thứ nhất (A)</label>
+            <input type="text" id="numA" value="657383">
+        </div>
+        <div class="input-grp" style="width: 80px;">
+            <label>Phép tính</label>
+            <select id="operator">
+                <option value="+">+</option>
+                <option value="-">-</option>
+                <option value="*">×</option>
+            </select>
+        </div>
+        <div class="input-grp">
+            <label>Số thứ hai (B)</label>
+            <input type="text" id="numB" value="654321">
+        </div>
+        <div class="input-grp">
+            <label>Hệ cơ số (Base)</label>
+            <input type="number" id="base" value="16" min="2" max="36" style="width:80px">
+        </div>
+        <button onclick="startCalculation()">TÍNH & MÔ PHỎNG</button>
+    </div>
+
+    <div class="stage-container">
+        <div class="board" id="board">
+            <div style="color:#555; align-self:center;">Nhấn nút để bắt đầu đặt tính...</div>
+        </div>
+        <div class="log-panel" id="logPanel">
+            <div class="log-entry">System ready...</div>
+        </div>
+    </div>
+
+    <script>
+        const DIGITS = "0123456789ABCDEFGHIJKLMNOPQRSTUVWXYZ";
+
+        function log(msg) {
+            const p = document.getElementById('logPanel');
+            const div = document.createElement('div');
+            div.className = 'log-entry';
+            div.innerHTML = msg;
+            p.prepend(div);
+        }
+
+        function valToChar(v) { return DIGITS[v]; }
+        function charToVal(c) { return DIGITS.indexOf(c.toUpperCase()); }
+
+        function startCalculation() {
+            const numAStr = document.getElementById('numA').value.toUpperCase().trim();
+            const numBStr = document.getElementById('numB').value.toUpperCase().trim();
+            const op = document.getElementById('operator').value;
+            const base = parseInt(document.getElementById('base').value);
+            const board = document.getElementById('board');
+            const logPanel = document.getElementById('logPanel');
+
+            board.innerHTML = '';
+            logPanel.innerHTML = '';
+
+            // Validation
+            if (!validate(numAStr, base) || !validate(numBStr, base)) {
+                alert(`Số không hợp lệ với hệ cơ số ${base}`);
+                return;
+            }
+
+            if (op === '+') visualizeAdd(numAStr, numBStr, base);
+            else if (op === '-') visualizeSub(numAStr, numBStr, base);
+            else if (op === '*') visualizeMul(numAStr, numBStr, base);
+        }
+
+        function validate(str, base) {
+            for (let c of str) {
+                if (charToVal(c) === -1 || charToVal(c) >= base) return false;
+            }
+            return true;
+        }
+
+        // --- VISUALIZE ADDITION ---
+        async function visualizeAdd(aStr, bStr, base) {
+            const maxLen = Math.max(aStr.length, bStr.length) + 1;
+            
+            // Pad left
+            const A = aStr.padStart(maxLen, ' ');
+            const B = bStr.padStart(maxLen, ' ');
+            let carries = new Array(maxLen).fill(0);
+            let result = new Array(maxLen).fill(' ');
+
+            createGrid(maxLen, 4); // 4 rows: Carry, A, B, Result
+
+            // Fill static
+            fillRow(1, A);
+            fillRow(2, B);
+            setCell(2, 0, '+', 'op-symbol');
+
+            // Logic Loop (Right to Left)
+            for (let i = maxLen - 1; i >= 0; i--) {
+                if (A[i] === ' ' && B[i] === ' ' && carries[i] === 0) continue;
+
+                highlightCol(i, maxLen);
+                await wait(800);
+
+                const valA = A[i] === ' ' ? 0 : charToVal(A[i]);
+                const valB = B[i] === ' ' ? 0 : charToVal(B[i]);
+                const carryIn = carries[i];
+
+                const sum = valA + valB + carryIn;
+                const digit = sum % base;
+                const carryOut = Math.floor(sum / base);
+
+                // Log
+                let explain = `<span class="log-step">[Cột ${maxLen - 1 - i}]</span> `;
+                explain += `${valToChar(valA)} + ${valToChar(valB)}`;
+                if (carryIn > 0) explain += ` + nhớ ${carryIn}`;
+                explain += ` = ${sum} (dec)`;
+                
+                if (sum >= base) {
+                    explain += ` -> Viết <b>${valToChar(digit)}</b> nhớ <b>${carryOut}</b>`;
+                    // Show carry
+                    if (i > 0) {
+                        carries[i-1] = carryOut;
+                        setCell(0, i-1, carryOut, 'carry highlight');
+                    }
+                } else {
+                    explain += ` -> Viết <b>${valToChar(digit)}</b>`;
+                }
+                log(explain);
+
+                setCell(3, i, valToChar(digit), 'result highlight');
+                await wait(400);
+            }
+        }
+
+        // --- VISUALIZE SUBTRACTION (Example Prompt Logic) ---
+        async function visualizeSub(aStr, bStr, base) {
+            // Ensure A >= B for simplicity in this demo, or handle negative sign
+            // Convert to dec to check magnitude strictly for layout
+            const decA = parseInt(aStr, base); // JS parsing for magnitude check only
+            const decB = parseInt(bStr, base);
+            
+            if (decA < decB) {
+                alert("Demo này hiện hỗ trợ Số lớn - Số bé.");
+                return;
+            }
+
+            const maxLen = Math.max(aStr.length, bStr.length);
+            const A = aStr.padStart(maxLen, ' ');
+            const B = bStr.padStart(maxLen, ' ');
+            
+            // Borrows array: 0 = no borrow, 1 = borrowed
+            let borrows = new Array(maxLen).fill(0);
+
+            // Grid: Row 0 (Borrow indicators), Row 1 (A), Row 2 (B), Row 3 (Result)
+            createGrid(maxLen, 4);
+
+            fillRow(1, A);
+            fillRow(2, B);
+            setCell(2, -1, '-', 'op-symbol'); // Hacky pos
+
+            for (let i = maxLen - 1; i >= 0; i--) {
+                highlightCol(i, maxLen);
+                await wait(800);
+
+                let valA = charToVal(A[i]);
+                const valB = B[i] === ' ' ? 0 : charToVal(B[i]);
+                const borrowed = borrows[i]; // Did previous col borrow from me?
+
+                let explain = `<span class="log-step">[Cột ${maxLen - 1 - i}]</span> `;
+                
+                // Logic: Current A minus Borrowed (from right) minus B
+                let currentTop = valA;
+                
+                if (borrowed > 0) {
+                    explain += `Bị mượn 1 từ trước: ${valToChar(valA)} -> ${valToChar(valA - 1)}. `;
+                    currentTop -= 1;
+                }
+
+                if (currentTop < valB) {
+                    // Need to borrow from left
+                    explain += `${valToChar(currentTop)} < ${valToChar(valB)} -> Mượn 1 ở hàng trước (trị giá ${base}). `;
+                    currentTop += base;
+                    if(i > 0) {
+                        borrows[i-1] = 1;
+                        setCell(0, i-1, '-1', 'borrow highlight');
+                    }
+                    explain += `Lấy ${currentTop} - ${valToChar(valB)} = `;
+                } else {
+                    explain += `Lấy ${valToChar(currentTop)} - ${valToChar(valB)} = `;
+                }
+
+                const diff = currentTop - valB;
+                explain += `<b>${valToChar(diff)}</b>`;
+                log(explain);
+
+                setCell(3, i, valToChar(diff), 'result highlight');
+                await wait(400);
+            }
+        }
+
+        // --- VISUALIZE MULTIPLICATION (Simple 1-digit or Standard) ---
+        async function visualizeMul(aStr, bStr, base) {
+             const lenA = aStr.length;
+             const lenB = bStr.length;
+             const totalRows = lenB + 3; // Input A, Input B, Intermediate rows, Result
+             const width = lenA + lenB + 1;
+
+             createGrid(width, totalRows);
+             
+             // Setup
+             const padA = aStr.padStart(width, ' ');
+             const padB = bStr.padStart(width, ' ');
+             fillRow(0, padA);
+             fillRow(1, padB);
+             setCell(1, width - lenB - 1, '×', 'op-symbol');
+
+             let results = []; // To store intermediate values for final summation logic (simplified visualization)
+
+             // Loop bottom digits (right to left)
+             for(let i = 0; i < lenB; i++) {
+                 let bIdx = lenB - 1 - i;
+                 let digitB = charToVal(bStr[bIdx]);
+                 let carry = 0;
+                 let currentRowStr = "";
+                 
+                 log(`<span class="log-step">Lượt ${i+1}:</span> Nhân ${bStr[bIdx]} với ${aStr}`);
+
+                 // Loop top digits
+                 let tempRowResult = "";
+                 for(let j = lenA - 1; j >= 0; j--) {
+                     let digitA = charToVal(aStr[j]);
+                     let prod = (digitA * digitB) + carry;
+                     let digit = prod % base;
+                     carry = Math.floor(prod / base);
+                     tempRowResult = valToChar(digit) + tempRowResult;
+                 }
+                 if(carry > 0) tempRowResult = valToChar(carry) + tempRowResult;
+
+                 // Display intermediate row
+                 let rowIdx = 2 + i;
+                 let shift = i;
+                 let displayStr = tempRowResult.padEnd(tempRowResult.length + shift, '0').padStart(width, ' ');
+                 
+                 // Show visuals
+                 // Simplify: Just print the row string for now
+                 for(let k=0; k<width; k++) {
+                     if(displayStr[k] !== ' ') setCell(rowIdx, k, displayStr[k], 'highlight');
+                 }
+                 await wait(1000);
+             }
+             
+             // Final Result (Cheat calculation for display to save complex addition viz logic overlap)
+             let decA = parseInt(aStr, base);
+             let decB = parseInt(bStr, base);
+             let decRes = BigInt(decA) * BigInt(decB);
+             let finalStr = decRes.toString(base).toUpperCase().padStart(width, ' ');
+             
+             log(`Cộng các kết quả lại...`);
+             fillRow(totalRows - 1, finalStr, 'result highlight');
+        }
+
+
+        // --- GRID HELPER FUNCTIONS ---
+        function createGrid(cols, rows) {
+            const board = document.getElementById('board');
+            board.innerHTML = '';
+            const grid = document.createElement('div');
+            grid.className = 'calc-grid';
+            grid.style.gridTemplateColumns = `repeat(${cols}, 50px)`;
+            grid.id = 'activeGrid';
+
+            for (let r = 0; r < rows; r++) {
+                for (let c = 0; c < cols; c++) {
+                    const cell = document.createElement('div');
+                    cell.className = 'cell';
+                    cell.id = `cell-${r}-${c}`;
+                    grid.appendChild(cell);
+                }
+            }
+            board.appendChild(grid);
+        }
+
+        function setCell(row, col, val, classes = '') {
+            const cell = document.getElementById(`cell-${row}-${col}`);
+            if (cell) {
+                cell.innerText = val;
+                cell.className = `cell ${classes}`;
+            }
+        }
+
+        function fillRow(row, str, classes = '') {
+            for (let i = 0; i < str.length; i++) {
+                setCell(row, i, str[i], classes);
+            }
+        }
+
+        function highlightCol(col, maxCols) {
+            // Remove old active
+            document.querySelectorAll('.active').forEach(e => e.classList.remove('active'));
+            // Set new active
+            const grid = document.getElementById('activeGrid');
+            // Assuming 4 rows for Add/Sub
+            for(let r=0; r<4; r++) {
+                const cell = document.getElementById(`cell-${r}-${col}`);
+                if(cell) cell.classList.add('active');
+            }
+        }
+
+        function wait(ms) { return new Promise(r => setTimeout(r, ms)); }
+
+    </script>
+</body>
+</html>

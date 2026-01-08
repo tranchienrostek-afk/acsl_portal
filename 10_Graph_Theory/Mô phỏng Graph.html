@@ -1,0 +1,300 @@
+<!DOCTYPE html>
+<html lang="vi">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Mô phỏng Graph Theory - ACSL</title>
+    <link
+        href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;800&family=JetBrains+Mono:wght@400;700&display=swap"
+        rel="stylesheet">
+    <style>
+        :root {
+            --bg: #0a0a0f;
+            --card: rgba(20, 20, 30, 0.9);
+            --accent: #10b981;
+            --text: #f1f5f9;
+            --dim: #94a3b8;
+        }
+
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Inter', sans-serif;
+            background: var(--bg);
+            color: var(--text);
+            padding: 30px 15px;
+        }
+
+        .container {
+            max-width: 1000px;
+            margin: 0 auto;
+        }
+
+        header {
+            text-align: center;
+            margin-bottom: 30px;
+        }
+
+        h1 {
+            font-size: 2rem;
+            background: linear-gradient(to right, #10b981, #3b82f6);
+            -webkit-background-clip: text;
+            background-clip: text;
+            -webkit-text-fill-color: transparent;
+        }
+
+        h2 {
+            color: var(--accent);
+            margin: 20px 0 15px;
+            font-size: 1.2rem;
+        }
+
+        .card {
+            background: var(--card);
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            border-radius: 16px;
+            padding: 20px;
+            margin-bottom: 20px;
+        }
+
+        .grid {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 20px;
+        }
+
+        @media (max-width: 700px) {
+            .grid {
+                grid-template-columns: 1fr;
+            }
+        }
+
+        canvas {
+            background: #000;
+            border-radius: 10px;
+            display: block;
+            margin: 0 auto;
+        }
+
+        .controls {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 10px;
+            margin: 15px 0;
+        }
+
+        button {
+            padding: 10px 20px;
+            border-radius: 8px;
+            border: none;
+            background: var(--accent);
+            color: #fff;
+            font-weight: 600;
+            cursor: pointer;
+        }
+
+        button:hover {
+            opacity: 0.9;
+        }
+
+        .matrix {
+            font-family: 'JetBrains Mono', monospace;
+            background: #000;
+            padding: 15px;
+            border-radius: 10px;
+        }
+
+        .matrix table {
+            border-collapse: collapse;
+            width: 100%;
+        }
+
+        .matrix th,
+        .matrix td {
+            padding: 8px;
+            text-align: center;
+            border: 1px solid rgba(255, 255, 255, 0.2);
+        }
+
+        .matrix th {
+            color: var(--accent);
+        }
+
+        .info {
+            background: rgba(16, 185, 129, 0.1);
+            padding: 15px;
+            border-radius: 10px;
+            margin-top: 15px;
+        }
+    </style>
+</head>
+
+<body>
+    <div class="container">
+        <header>
+            <h1>🔗 Mô phỏng Graph Theory</h1>
+            <p style="color: var(--dim);">Lý thuyết đồ thị cho ACSL</p>
+        </header>
+
+        <div class="grid">
+            <div class="card">
+                <h2>📊 Đồ thị tương tác</h2>
+                <canvas id="graphCanvas" width="400" height="300"></canvas>
+                <div class="controls">
+                    <button onclick="loadGraph('simple')">Đồ thị đơn giản</button>
+                    <button onclick="loadGraph('tree')">Cây (Tree)</button>
+                    <button onclick="loadGraph('directed')">Đồ thị có hướng</button>
+                    <button onclick="loadGraph('cycle')">Có chu trình</button>
+                </div>
+                <div class="info" id="graphInfo">
+                    <strong>Thông tin:</strong> Chọn một loại đồ thị để xem
+                </div>
+            </div>
+
+            <div class="card">
+                <h2>📋 Ma trận kề (Adjacency Matrix)</h2>
+                <div class="matrix" id="matrixDisplay">
+                    <p style="color: var(--dim);">Chọn đồ thị để xem ma trận kề</p>
+                </div>
+            </div>
+        </div>
+
+        <div class="card">
+            <h2>📖 Thuật ngữ cơ bản</h2>
+            <div class="grid">
+                <div>
+                    <ul style="padding-left: 20px; line-height: 2;">
+                        <li><strong>Vertex (Node):</strong> Đỉnh của đồ thị</li>
+                        <li><strong>Edge:</strong> Cạnh nối 2 đỉnh</li>
+                        <li><strong>Path:</strong> Đường đi qua các cạnh</li>
+                        <li><strong>Cycle:</strong> Đường đi khép kín</li>
+                    </ul>
+                </div>
+                <div>
+                    <ul style="padding-left: 20px; line-height: 2;">
+                        <li><strong>Connected:</strong> Tất cả đỉnh đều có đường đi</li>
+                        <li><strong>Tree:</strong> Đồ thị liên thông không có chu trình</li>
+                        <li><strong>Forest:</strong> Tập hợp nhiều cây</li>
+                        <li><strong>DAG:</strong> Directed Acyclic Graph</li>
+                    </ul>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        const canvas = document.getElementById('graphCanvas');
+        const ctx = canvas.getContext('2d');
+
+        const graphs = {
+            simple: {
+                nodes: [{ id: 'A', x: 50, y: 150 }, { id: 'B', x: 150, y: 50 }, { id: 'C', x: 250, y: 50 }, { id: 'D', x: 350, y: 150 }, { id: 'E', x: 250, y: 250 }, { id: 'F', x: 150, y: 250 }],
+                edges: [['A', 'B'], ['B', 'C'], ['C', 'D'], ['D', 'E'], ['E', 'F'], ['F', 'A'], ['B', 'E']],
+                directed: false,
+                info: 'Đồ thị vô hướng với 6 đỉnh, 7 cạnh, có chu trình'
+            },
+            tree: {
+                nodes: [{ id: 'A', x: 200, y: 30 }, { id: 'B', x: 100, y: 100 }, { id: 'C', x: 300, y: 100 }, { id: 'D', x: 50, y: 180 }, { id: 'E', x: 150, y: 180 }, { id: 'F', x: 250, y: 180 }, { id: 'G', x: 350, y: 180 }],
+                edges: [['A', 'B'], ['A', 'C'], ['B', 'D'], ['B', 'E'], ['C', 'F'], ['C', 'G']],
+                directed: false,
+                info: 'Cây (Tree): 7 đỉnh, 6 cạnh (V-1), không có chu trình'
+            },
+            directed: {
+                nodes: [{ id: 'A', x: 80, y: 100 }, { id: 'B', x: 200, y: 50 }, { id: 'C', x: 320, y: 100 }, { id: 'D', x: 200, y: 200 }],
+                edges: [['A', 'B'], ['B', 'C'], ['C', 'D'], ['D', 'A'], ['A', 'C']],
+                directed: true,
+                info: 'Đồ thị có hướng (Directed): cạnh có chiều di chuyển'
+            },
+            cycle: {
+                nodes: [{ id: 'A', x: 200, y: 50 }, { id: 'B', x: 320, y: 130 }, { id: 'C', x: 280, y: 250 }, { id: 'D', x: 120, y: 250 }, { id: 'E', x: 80, y: 130 }],
+                edges: [['A', 'B'], ['B', 'C'], ['C', 'D'], ['D', 'E'], ['E', 'A']],
+                directed: false,
+                info: 'Chu trình (Cycle): đường đi A→B→C→D→E→A'
+            }
+        };
+
+        let currentGraph = null;
+
+        function drawGraph(g) {
+            ctx.clearRect(0, 0, canvas.width, canvas.height);
+
+            // Draw edges
+            ctx.strokeStyle = '#4a5568';
+            ctx.lineWidth = 2;
+            g.edges.forEach(([from, to]) => {
+                const n1 = g.nodes.find(n => n.id === from);
+                const n2 = g.nodes.find(n => n.id === to);
+                ctx.beginPath();
+                ctx.moveTo(n1.x, n1.y);
+                ctx.lineTo(n2.x, n2.y);
+                ctx.stroke();
+
+                if (g.directed) {
+                    const angle = Math.atan2(n2.y - n1.y, n2.x - n1.x);
+                    const arrowX = n2.x - 20 * Math.cos(angle);
+                    const arrowY = n2.y - 20 * Math.sin(angle);
+                    ctx.beginPath();
+                    ctx.moveTo(arrowX, arrowY);
+                    ctx.lineTo(arrowX - 10 * Math.cos(angle - 0.5), arrowY - 10 * Math.sin(angle - 0.5));
+                    ctx.lineTo(arrowX - 10 * Math.cos(angle + 0.5), arrowY - 10 * Math.sin(angle + 0.5));
+                    ctx.closePath();
+                    ctx.fillStyle = '#4a5568';
+                    ctx.fill();
+                }
+            });
+
+            // Draw nodes
+            g.nodes.forEach(n => {
+                ctx.beginPath();
+                ctx.arc(n.x, n.y, 20, 0, Math.PI * 2);
+                ctx.fillStyle = '#10b981';
+                ctx.fill();
+                ctx.strokeStyle = '#fff';
+                ctx.lineWidth = 2;
+                ctx.stroke();
+                ctx.fillStyle = '#fff';
+                ctx.font = 'bold 14px Inter';
+                ctx.textAlign = 'center';
+                ctx.textBaseline = 'middle';
+                ctx.fillText(n.id, n.x, n.y);
+            });
+        }
+
+        function buildMatrix(g) {
+            const ids = g.nodes.map(n => n.id).sort();
+            const matrix = {};
+            ids.forEach(i => { matrix[i] = {}; ids.forEach(j => matrix[i][j] = 0); });
+            g.edges.forEach(([a, b]) => {
+                matrix[a][b] = 1;
+                if (!g.directed) matrix[b][a] = 1;
+            });
+
+            let html = '<table><tr><th></th>';
+            ids.forEach(id => html += `<th>${id}</th>`);
+            html += '</tr>';
+            ids.forEach(i => {
+                html += `<tr><th>${i}</th>`;
+                ids.forEach(j => html += `<td>${matrix[i][j]}</td>`);
+                html += '</tr>';
+            });
+            html += '</table>';
+            return html;
+        }
+
+        function loadGraph(name) {
+            currentGraph = graphs[name];
+            drawGraph(currentGraph);
+            document.getElementById('graphInfo').innerHTML = `<strong>Thông tin:</strong> ${currentGraph.info}`;
+            document.getElementById('matrixDisplay').innerHTML = buildMatrix(currentGraph);
+        }
+
+        loadGraph('simple');
+    </script>
+</body>
+
+</html>

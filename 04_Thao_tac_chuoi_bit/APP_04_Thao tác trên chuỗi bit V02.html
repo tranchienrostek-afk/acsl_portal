@@ -1,0 +1,544 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Quantum Bit Cinema</title>
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Orbitron:wght@400;700&family=Share+Tech+Mono&display=swap');
+
+        :root {
+            --bg-deep: #050505;
+            --panel-bg: #0a0a12;
+            --neon-blue: #00f3ff;
+            --neon-pink: #ff0055;
+            --neon-green: #00ff9d;
+            --neon-amber: #ffaa00;
+            --grid-line: rgba(0, 243, 255, 0.1);
+        }
+
+        body {
+            background-color: var(--bg-deep);
+            color: #fff;
+            font-family: 'Share Tech Mono', monospace;
+            margin: 0;
+            height: 100vh;
+            display: flex;
+            flex-direction: column;
+            overflow: hidden;
+            background-image: 
+                linear-gradient(var(--grid-line) 1px, transparent 1px),
+                linear-gradient(90deg, var(--grid-line) 1px, transparent 1px);
+            background-size: 40px 40px;
+        }
+
+        /* HEADER & CONTROLS */
+        header {
+            padding: 20px;
+            background: rgba(0,0,0,0.8);
+            border-bottom: 1px solid var(--neon-blue);
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            z-index: 100;
+            box-shadow: 0 0 20px rgba(0, 243, 255, 0.2);
+        }
+
+        h1 { margin: 0; font-family: 'Orbitron', sans-serif; text-transform: uppercase; letter-spacing: 3px; color: var(--neon-blue); text-shadow: 0 0 10px var(--neon-blue); }
+
+        .input-group { display: flex; gap: 10px; width: 60%; }
+        input {
+            flex: 1; background: rgba(0,0,0,0.5); border: 1px solid var(--neon-blue); color: var(--neon-blue);
+            padding: 10px; font-family: 'Orbitron'; font-size: 1.2rem; letter-spacing: 2px; text-transform: uppercase;
+        }
+        button {
+            background: var(--neon-blue); color: #000; border: none; padding: 10px 30px;
+            font-family: 'Orbitron'; font-weight: bold; cursor: pointer;
+            transition: 0.2s; clip-path: polygon(10% 0, 100% 0, 100% 70%, 90% 100%, 0 100%, 0 30%);
+        }
+        button:hover { background: #fff; box-shadow: 0 0 20px #fff; }
+
+        /* THE ARENA (Visualization Area) */
+        #arena {
+            flex: 1;
+            position: relative;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            perspective: 1000px;
+        }
+
+        /* Variable Definition Panel */
+        .vars-panel {
+            position: absolute;
+            left: 20px;
+            top: 100px;
+            width: 250px;
+            background: rgba(10, 10, 18, 0.9);
+            border: 1px solid var(--neon-pink);
+            padding: 15px;
+            border-radius: 5px;
+        }
+        .var-item { display: flex; justify-content: space-between; margin-bottom: 10px; font-size: 1.1rem; }
+        .var-name { color: var(--neon-pink); font-weight: bold; }
+        .var-val { color: #fff; letter-spacing: 2px; }
+
+        /* OPERATION STAGE */
+        .op-stage {
+            width: 80%;
+            height: 400px;
+            position: relative;
+            display: none; /* Hidden until running */
+        }
+
+        .row-container {
+            display: flex;
+            justify-content: center;
+            gap: 15px;
+            margin-bottom: 60px;
+            position: relative;
+        }
+
+        .bit-box {
+            width: 60px;
+            height: 60px;
+            border: 2px solid #333;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 2rem;
+            font-family: 'Orbitron';
+            background: rgba(0,0,0,0.5);
+            position: relative;
+            transition: 0.3s;
+        }
+
+        .bit-box.one { border-color: var(--neon-blue); color: var(--neon-blue); box-shadow: inset 0 0 15px rgba(0, 243, 255, 0.3); }
+        .bit-box.zero { border-color: #555; color: #777; }
+        
+        .label {
+            position: absolute;
+            left: -80px;
+            top: 15px;
+            font-family: 'Orbitron';
+            color: var(--neon-green);
+            font-size: 1.2rem;
+        }
+
+        /* ANIMATION ELEMENTS */
+        .scanner-beam {
+            position: absolute;
+            top: -20px;
+            bottom: -20px;
+            width: 70px;
+            border: 2px solid var(--neon-pink);
+            background: rgba(255, 0, 85, 0.1);
+            box-shadow: 0 0 30px var(--neon-pink);
+            z-index: 50;
+            transition: left 0.3s ease-in-out;
+            pointer-events: none;
+            display: none;
+        }
+
+        .flying-bit {
+            position: absolute;
+            width: 50px;
+            height: 50px;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-weight: bold;
+            font-size: 1.5rem;
+            z-index: 100;
+            transition: all 0.5s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+        }
+        .flying-bit.one { background: var(--neon-blue); color: #000; box-shadow: 0 0 20px var(--neon-blue); }
+        .flying-bit.zero { background: #333; color: #aaa; border: 1px solid #555; }
+
+        .logic-gate-visual {
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            width: 150px;
+            height: 150px;
+            background: #000;
+            border: 4px solid var(--neon-amber);
+            border-radius: 50%;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            z-index: 90;
+            box-shadow: 0 0 50px var(--neon-amber);
+            opacity: 0;
+            transition: opacity 0.5s;
+        }
+        .gate-name { color: var(--neon-amber); font-weight: bold; font-size: 1.5rem; }
+        .gate-calc { color: #fff; margin-top: 5px; font-size: 1.2rem; }
+
+        .result-row { margin-top: 50px; }
+        
+        /* Status Text */
+        #statusText {
+            position: absolute;
+            bottom: 30px;
+            width: 100%;
+            text-align: center;
+            font-size: 1.5rem;
+            color: #aaa;
+            text-transform: uppercase;
+        }
+        
+        .highlight-text { color: var(--neon-blue); animation: blink 1s infinite; }
+        @keyframes blink { 50% { opacity: 0.5; } }
+
+    </style>
+</head>
+<body>
+
+    <header>
+        <h1>Quantum Bit Cinema</h1>
+        <div class="input-group">
+            <input type="text" id="expr" value="(A AND B) OR C" placeholder="Nhập biểu thức (VD: A AND B)">
+            <button onclick="startSequence()">KHỞI CHẠY (RUN)</button>
+        </div>
+    </header>
+
+    <div class="vars-panel">
+        <h3 style="margin:0 0 10px 0; color:#fff">MEMORY BANK</h3>
+        <div id="varsList">
+            </div>
+        <button onclick="addVar()" style="width:100%; margin-top:10px; padding:5px; font-size:0.8rem">ADD VARIABLE</button>
+    </div>
+
+    <div id="arena">
+        <div id="welcome" style="text-align:center; color:#555">
+            <h2 style="font-size:3rem; margin:0">SẴN SÀNG</h2>
+            <p>Nhập biểu thức và nhấn nút để xem ma thuật.</p>
+        </div>
+
+        <div id="stage" class="op-stage">
+            <div class="scanner-beam" id="scanner"></div>
+            
+            <div class="logic-gate-visual" id="logicGate">
+                <div class="gate-name">AND</div>
+                <div class="gate-calc">1 & 1 = 1</div>
+            </div>
+
+            <div id="dynamicRows" style="padding-top: 50px;"></div>
+        </div>
+
+        <div id="statusText">...</div>
+    </div>
+
+    <script>
+        // --- 1. DATA & CONFIG ---
+        let variables = [
+            { name: 'A', val: '10101' },
+            { name: 'B', val: '00111' },
+            { name: 'C', val: '11000' }
+        ];
+
+        // --- 2. CORE UTILS ---
+        const sleep = ms => new Promise(r => setTimeout(r, ms));
+        
+        function pad(str, len) { return str.padStart(len, '0'); }
+
+        function renderVars() {
+            const list = document.getElementById('varsList');
+            list.innerHTML = '';
+            variables.forEach((v, i) => {
+                list.innerHTML += `
+                <div class="var-item">
+                    <input class="var-name" value="${v.name}" style="width:30px; background:none; border:none; color:#ff0055; font-weight:bold; font-size:1.2rem" onchange="updateVarName(${i}, this.value)">
+                    <input class="var-val" value="${v.val}" style="width:100px; background:none; border:1px solid #333; color:white; font-family:monospace" onchange="updateVarVal(${i}, this.value)">
+                </div>`;
+            });
+        }
+        function addVar() { variables.push({name: 'X', val: '00000'}); renderVars(); }
+        function updateVarName(i, v) { variables[i].name = v.toUpperCase(); }
+        function updateVarVal(i, v) { variables[i].val = v.replace(/[^01]/g,''); }
+
+        // --- 3. LOGIC PARSER (RPN) ---
+        const OPERATORS = {
+            'NOT': { prec: 4, type: 'unary' },
+            'LSHIFT': { prec: 3, type: 'unary_arg' },
+            'RSHIFT': { prec: 3, type: 'unary_arg' },
+            'AND': { prec: 2, type: 'binary' },
+            'XOR': { prec: 1, type: 'binary' },
+            'OR': { prec: 0, type: 'binary' }
+        };
+
+        function tokenize(expr) {
+            expr = expr.replace(/\(/g,' ( ').replace(/\)/g,' ) ').toUpperCase().replace(/-/g, ' '); 
+            // Fix LSHIFT-2 -> LSHIFT 2 for simpler parsing logic here
+            return expr.split(/\s+/).filter(t => t);
+        }
+
+        function parse(tokens) {
+            let out = [], stack = [];
+            for (let t of tokens) {
+                if (t.match(/^\d+$/)) out.push({type:'NUM', val: parseInt(t)});
+                else if (variables.find(v=>v.name===t) || t.match(/^[01]+$/)) out.push({type:'VAL', val: t});
+                else if (OPERATORS[t]) {
+                    while (stack.length && stack[stack.length-1].val !== '(' && 
+                           ((OPERATORS[t].type!=='unary' && OPERATORS[t].prec <= OPERATORS[stack[stack.length-1].val]?.prec))) {
+                        out.push(stack.pop());
+                    }
+                    stack.push({type:'OP', val: t});
+                } else if (t === '(') stack.push({type:'PAREN', val: t});
+                else if (t === ')') {
+                    while (stack.length && stack[stack.length-1].val !== '(') out.push(stack.pop());
+                    stack.pop();
+                }
+            }
+            while(stack.length) out.push(stack.pop());
+            return out;
+        }
+
+        // --- 4. CINEMATIC ENGINE ---
+
+        // Hàm tạo 1 hàng bit HTML
+        function createRowHTML(id, label, bits) {
+            let html = `<div class="row-container" id="${id}"><div class="label">${label}</div>`;
+            for (let i = 0; i < bits.length; i++) {
+                const b = bits[i];
+                html += `<div class="bit-box ${b==='1'?'one':'zero'}" id="${id}_b${i}">${b}</div>`;
+            }
+            html += `</div>`;
+            return html;
+        }
+
+        async function flyBit(fromId, targetRect, val) {
+            const fromEl = document.getElementById(fromId);
+            const rect = fromEl.getBoundingClientRect();
+            
+            // Create flying element
+            const flyer = document.createElement('div');
+            flyer.className = `flying-bit ${val==='1'?'one':'zero'}`;
+            flyer.innerText = val;
+            flyer.style.left = rect.left + 'px';
+            flyer.style.top = rect.top + 'px';
+            document.body.appendChild(flyer);
+
+            // Trigger reflow
+            flyer.offsetHeight; 
+
+            // Move
+            flyer.style.left = (targetRect.left + targetRect.width/2 - 25) + 'px';
+            flyer.style.top = (targetRect.top + targetRect.height/2 - 25) + 'px';
+
+            await sleep(500);
+            flyer.remove();
+        }
+
+        async function animateBinaryOp(opName, valA, valB) {
+            const stage = document.getElementById('stage');
+            const container = document.getElementById('dynamicRows');
+            const gate = document.getElementById('logicGate');
+            const scanner = document.getElementById('scanner');
+            const status = document.getElementById('statusText');
+
+            // Chuẩn hóa độ dài
+            const len = Math.max(valA.length, valB.length);
+            const strA = pad(valA, len);
+            const strB = pad(valB, len);
+            let resultStr = "";
+
+            // Setup UI
+            container.innerHTML = "";
+            container.innerHTML += createRowHTML('rowA', 'INPUT A', strA);
+            container.innerHTML += createRowHTML('rowB', 'INPUT B', strB);
+            
+            // Tạo hàng kết quả rỗng (ẩn nội dung)
+            let emptyRes = Array(len).fill('').join('');
+            container.innerHTML += `<div class="row-container" id="rowRes" style="margin-top:100px"><div class="label" style="color:#fff">OUTPUT</div>`;
+            for(let i=0; i<len; i++) container.lastElementChild.innerHTML += `<div class="bit-box" id="rowRes_b${i}"></div>`;
+            container.lastElementChild.innerHTML += `</div>`;
+
+            gate.style.opacity = 1;
+            gate.querySelector('.gate-name').innerText = opName;
+            scanner.style.display = 'block';
+
+            // --- VÒNG LẶP CINEMATIC TỪNG BIT ---
+            for (let i = 0; i < len; i++) {
+                const bitA = strA[i];
+                const bitB = strB[i];
+                
+                // 1. Di chuyển Scanner đến cột i
+                const cellA = document.getElementById(`rowA_b${i}`);
+                const rectA = cellA.getBoundingClientRect();
+                const containerRect = stage.getBoundingClientRect();
+                
+                // Tính toán vị trí tương đối cho scanner
+                // Scanner nằm trong stage (relative), nên tính left dựa trên offset của cellA so với stage
+                // Đơn giản hóa: dùng position absolute toàn cục tạm thời hoặc tính toán kỹ
+                
+                // Chỉnh Scanner khớp vị trí
+                scanner.style.left = (cellA.offsetLeft - 5) + 'px';
+                status.innerHTML = `Đang quét bit tại vị trí <span class="highlight-text">${i}</span>`;
+
+                // Highlight ô đang xét
+                cellA.style.borderColor = '#fff';
+                document.getElementById(`rowB_b${i}`).style.borderColor = '#fff';
+
+                await sleep(400);
+
+                // 2. Bay bit vào cổng
+                const gateRect = gate.getBoundingClientRect();
+                flyBit(`rowA_b${i}`, gateRect, bitA);
+                flyBit(`rowB_b${i}`, gateRect, bitB);
+
+                await sleep(500);
+
+                // 3. Tính toán & Hiệu ứng Gate
+                let resBit = '0';
+                if (opName === 'AND') resBit = (bitA==='1' && bitB==='1') ? '1' : '0';
+                if (opName === 'OR') resBit = (bitA==='1' || bitB==='1') ? '1' : '0';
+                if (opName === 'XOR') resBit = (bitA !== bitB) ? '1' : '0';
+
+                gate.querySelector('.gate-calc').innerText = `${bitA} ${opName} ${bitB} ➔ ${resBit}`;
+                gate.style.transform = "translate(-50%, -50%) scale(1.2)";
+                gate.style.boxShadow = `0 0 80px ${resBit==='1' ? 'var(--neon-blue)' : '#555'}`;
+
+                await sleep(300);
+                gate.style.transform = "translate(-50%, -50%) scale(1)";
+                
+                // 4. Bắn kết quả xuống
+                const cellRes = document.getElementById(`rowRes_b${i}`);
+                const rectRes = cellRes.getBoundingClientRect();
+                
+                // Tạo một viên đạn từ gate bay xuống
+                const bullet = document.createElement('div');
+                bullet.className = `flying-bit ${resBit==='1'?'one':'zero'}`;
+                bullet.innerText = resBit;
+                bullet.style.left = (gateRect.left + gateRect.width/2 - 25) + 'px';
+                bullet.style.top = (gateRect.top + gateRect.height/2 - 25) + 'px';
+                document.body.appendChild(bullet);
+
+                // Bay
+                bullet.offsetHeight; // reflow
+                bullet.style.left = rectRes.left + 'px';
+                bullet.style.top = rectRes.top + 'px';
+
+                await sleep(400);
+                bullet.remove();
+
+                // Hiện kết quả
+                cellRes.innerText = resBit;
+                cellRes.className = `bit-box ${resBit==='1'?'one':'zero'}`;
+                
+                // Reset highlight
+                cellA.style.borderColor = '#333';
+                document.getElementById(`rowB_b${i}`).style.borderColor = '#333';
+
+                resultStr += resBit;
+            }
+
+            scanner.style.display = 'none';
+            gate.style.opacity = 0;
+            status.innerHTML = `HOÀN THÀNH PHÉP ${opName}`;
+            await sleep(1000);
+            return resultStr;
+        }
+
+        async function animateUnaryOp(opName, valA, arg = null) {
+            const container = document.getElementById('dynamicRows');
+            const status = document.getElementById('statusText');
+            
+            let strA = valA;
+            let resultStr = "";
+
+            // Logic tính toán
+            if(opName === 'NOT') {
+                 resultStr = strA.split('').map(c => c==='1'?'0':'1').join('');
+            } else if (opName === 'LSHIFT') {
+                resultStr = (strA.substring(arg) + '0'.repeat(arg)).substring(0, strA.length);
+            } // ... add others logic similarly
+
+            // Render Input
+            container.innerHTML = "";
+            container.innerHTML += createRowHTML('rowA', 'INPUT', strA);
+            container.innerHTML += `<div class="row-container" id="rowRes" style="margin-top:100px"><div class="label" style="color:#fff">OUTPUT</div>`;
+            const len = strA.length;
+             for(let i=0; i<len; i++) container.lastElementChild.innerHTML += `<div class="bit-box" id="rowRes_b${i}"></div>`;
+            container.lastElementChild.innerHTML += `</div>`;
+
+            status.innerHTML = `THỰC HIỆN: ${opName} ${arg ? arg : ''}`;
+            
+            // Hiệu ứng đặc biệt cho Shift/Not: Quét 1 lần toàn bộ
+            await sleep(800);
+
+            for(let i=0; i<len; i++) {
+                const targetVal = resultStr[i];
+                const cellRes = document.getElementById(`rowRes_b${i}`);
+                
+                // Hiệu ứng lật
+                cellRes.style.transform = "rotateX(90deg)";
+                await sleep(100);
+                cellRes.innerText = targetVal;
+                cellRes.className = `bit-box ${targetVal==='1'?'one':'zero'}`;
+                cellRes.style.transform = "rotateX(0deg)";
+                await sleep(50);
+            }
+            return resultStr;
+        }
+
+        // --- 5. MAIN CONTROLLER ---
+
+        async function startSequence() {
+            document.getElementById('welcome').style.display = 'none';
+            document.getElementById('stage').style.display = 'block';
+            
+            const expr = document.getElementById('expr').value;
+            const tokens = tokenize(expr);
+            const queue = parse(tokens);
+            let stack = [];
+
+            // Resolve val
+            const getVal = (v) => {
+                const found = variables.find(x => x.name === v);
+                return found ? found.val : v;
+            }
+
+            for (let item of queue) {
+                if (item.type === 'VAL') {
+                    stack.push(getVal(item.val));
+                } else if (item.type === 'NUM') {
+                    stack.push(item.val);
+                } else if (item.type === 'OP') {
+                    const op = item.val;
+                    if (['LSHIFT','RSHIFT'].includes(op)) { // Simplification for demo
+                        const arg = stack.pop(); // num
+                        const val = stack.pop(); // bit string
+                        // For demo purpose, simple calc, ideally animateShift
+                        let res = "";
+                        if(op==='LSHIFT') res = (val.substring(arg) + '0'.repeat(arg)).substring(0, val.length);
+                        else res = ('0'.repeat(arg) + val.substring(0, val.length - arg));
+                        
+                        await animateUnaryOp(op, val, arg);
+                        stack.push(res);
+                    } else if (op === 'NOT') {
+                        const val = stack.pop();
+                        const res = await animateUnaryOp('NOT', val);
+                        stack.push(res);
+                    } else {
+                        // Binary
+                        const valB = stack.pop();
+                        const valA = stack.pop();
+                        const res = await animateBinaryOp(op, valA, valB);
+                        stack.push(res);
+                    }
+                }
+            }
+            
+            document.getElementById('statusText').innerHTML = "<span style='color:#00ff9d'>CHUỖI LỆNH HOÀN TẤT</span>";
+        }
+
+        renderVars();
+    </script>
+</body>
+</html>

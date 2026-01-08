@@ -1,0 +1,389 @@
+<!DOCTYPE html>
+<html lang="vi">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Mô phỏng ACSL - Câu 2</title>
+    <link
+        href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;800&family=JetBrains+Mono:wght@400;700&display=swap"
+        rel="stylesheet">
+    <style>
+        :root {
+            --bg: #030712;
+            --card-bg: rgba(17, 24, 39, 0.8);
+            --accent: #8b5cf6;
+            --accent-glow: rgba(139, 92, 246, 0.4);
+            --text: #f9fafb;
+            --text-dim: #9ca3af;
+            --match: #10b981;
+            --no-match: #ef4444;
+        }
+
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Inter', sans-serif;
+            background-color: var(--bg);
+            color: var(--text);
+            line-height: 1.6;
+            padding: 40px 20px;
+        }
+
+        .container {
+            max-width: 900px;
+            margin: 0 auto;
+        }
+
+        header {
+            text-align: center;
+            margin-bottom: 50px;
+        }
+
+        h1 {
+            font-size: 2.5rem;
+            font-weight: 800;
+            background: linear-gradient(to right, #8b5cf6, #d946ef);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            margin-bottom: 10px;
+        }
+
+        .card {
+            background: var(--card-bg);
+            backdrop-filter: blur(12px);
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            border-radius: 24px;
+            padding: 30px;
+            margin-bottom: 30px;
+            box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.5);
+        }
+
+        .code-block {
+            font-family: 'JetBrains Mono', monospace;
+            background: #000;
+            padding: 20px;
+            border-radius: 12px;
+            font-size: 0.95rem;
+            margin-bottom: 30px;
+            color: #d1d5db;
+            border-left: 4px solid var(--accent);
+        }
+
+        .section-title {
+            font-size: 1.25rem;
+            font-weight: 600;
+            margin-bottom: 20px;
+            color: var(--accent);
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+
+        .visualizer {
+            display: flex;
+            flex-direction: column;
+            gap: 30px;
+        }
+
+        .string-display {
+            display: flex;
+            gap: 10px;
+            justify-content: center;
+            flex-wrap: wrap;
+        }
+
+        .char-box {
+            width: 50px;
+            height: 50px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            background: rgba(255, 255, 255, 0.05);
+            border: 2px solid rgba(255, 255, 255, 0.1);
+            border-radius: 12px;
+            font-weight: 800;
+            font-size: 1.5rem;
+            transition: 0.3s;
+            position: relative;
+        }
+
+        .char-box.active {
+            border-color: var(--accent);
+            background: rgba(139, 92, 246, 0.2);
+            transform: scale(1.1);
+        }
+
+        .char-box.match {
+            background: rgba(16, 185, 129, 0.2);
+            border-color: var(--match);
+            color: var(--match);
+        }
+
+        .char-box .index {
+            position: absolute;
+            top: -20px;
+            font-size: 0.7rem;
+            color: var(--text-dim);
+            font-weight: 400;
+        }
+
+        .label {
+            width: 100px;
+            color: var(--text-dim);
+            font-size: 0.9rem;
+            text-transform: uppercase;
+            font-weight: 600;
+            display: flex;
+            align-items: center;
+        }
+
+        .row {
+            display: flex;
+            align-items: center;
+            gap: 15px;
+        }
+
+        .stats {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 20px;
+            margin-top: 20px;
+        }
+
+        .stat-card {
+            background: rgba(255, 255, 255, 0.03);
+            padding: 20px;
+            border-radius: 16px;
+            text-align: center;
+        }
+
+        .stat-val {
+            font-size: 2rem;
+            font-weight: 800;
+            color: var(--accent);
+        }
+
+        .stat-label {
+            font-size: 0.8rem;
+            color: var(--text-dim);
+            text-transform: uppercase;
+        }
+
+        .step-info {
+            background: rgba(139, 92, 246, 0.1);
+            padding: 15px;
+            border-radius: 12px;
+            border: 1px dashed var(--accent);
+            margin-bottom: 20px;
+            font-size: 0.95rem;
+        }
+
+        .controls {
+            display: flex;
+            gap: 15px;
+            justify-content: center;
+            margin-top: 30px;
+        }
+
+        button {
+            padding: 12px 24px;
+            border-radius: 12px;
+            border: none;
+            background: var(--accent);
+            color: white;
+            font-weight: 600;
+            cursor: pointer;
+            transition: 0.2s;
+        }
+
+        button:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 0 20px var(--accent-glow);
+        }
+
+        button:disabled {
+            opacity: 0.5;
+            cursor: not-allowed;
+            transform: none;
+        }
+
+        .highlight {
+            color: #facc15;
+        }
+    </style>
+</head>
+
+<body>
+
+    <div class="container">
+        <header>
+            <h1>Mô phỏng ACSL: Câu 2</h1>
+            <p class="text-dim">Đảo ngược chuỗi và đếm số ký tự trùng khớp tại cùng vị trí</p>
+        </header>
+
+        <div class="card">
+            <div class="section-title"><span>💻</span> Algorithm Code</div>
+            <div class="code-block">
+                a = "BANANAS"<br>
+                num = 0; t = ""<br>
+                <span id="line-for1">for j = len(a)-1 to 0 step -1</span><br>
+                &nbsp;&nbsp;&nbsp;&nbsp;t = t + a[j]<br>
+                next j<br>
+                <span id="line-for2">for j = 0 to len(a) - 1</span><br>
+                &nbsp;&nbsp;&nbsp;&nbsp;if a[j] == t[j] then<br>
+                &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;num = num + 1<br>
+                &nbsp;&nbsp;&nbsp;&nbsp;end if<br>
+                next j<br>
+                output num
+            </div>
+
+            <div class="step-info" id="status-msg">
+                Bấm "Tiếp theo" để bắt đầu quá trình đảo ngược chuỗi.
+            </div>
+
+            <div class="visualizer">
+                <!-- Original String -->
+                <div class="row">
+                    <div class="label">Chuỗi a</div>
+                    <div class="string-display" id="string-a">
+                        <!-- JS will populate -->
+                    </div>
+                </div>
+
+                <!-- Reversed String -->
+                <div class="row">
+                    <div class="label">Chuỗi t</div>
+                    <div class="string-display" id="string-t">
+                        <!-- JS will populate -->
+                    </div>
+                </div>
+            </div>
+
+            <div class="stats">
+                <div class="stat-card">
+                    <div class="stat-val" id="val-j">-</div>
+                    <div class="stat-label">Biến lặp j</div>
+                </div>
+                <div class="stat-card">
+                    <div class="stat-val" id="val-num">0</div>
+                    <div class="stat-label">Kết quả num</div>
+                </div>
+            </div>
+
+            <div class="controls">
+                <button id="btn-next">Tiếp theo</button>
+                <button id="btn-reset" style="background: #4b5563;">Reset</button>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        const a = "BANANAS";
+        let t = "";
+        let num = 0;
+        let currentPhase = 'REVERSING'; // 'REVERSING', 'MATCHING', 'DONE'
+        let j = a.length - 1;
+
+        const stringADiv = document.getElementById('string-a');
+        const stringTDiv = document.getElementById('string-t');
+        const statusMsg = document.getElementById('status-msg');
+        const valJ = document.getElementById('val-j');
+        const valNum = document.getElementById('val-num');
+        const btnNext = document.getElementById('btn-next');
+        const btnReset = document.getElementById('btn-reset');
+
+        function init() {
+            stringADiv.innerHTML = '';
+            stringTDiv.innerHTML = '';
+            for (let i = 0; i < a.length; i++) {
+                const box = document.createElement('div');
+                box.className = 'char-box';
+                box.innerText = a[i];
+                box.innerHTML += `<span class="index">${i}</span>`;
+                stringADiv.appendChild(box);
+
+                const tBox = document.createElement('div');
+                tBox.className = 'char-box';
+                tBox.innerHTML = `&nbsp;<span class="index">${i}</span>`;
+                stringTDiv.appendChild(tBox);
+            }
+            t = "";
+            num = 0;
+            j = a.length - 1;
+            currentPhase = 'REVERSING';
+            valJ.innerText = '-';
+            valNum.innerText = '0';
+            statusMsg.innerText = 'Bấm "Tiếp theo" để bắt đầu quá trình đảo ngược chuỗi.';
+            btnNext.disabled = false;
+            document.getElementById('line-for1').style.color = 'var(--accent)';
+            document.getElementById('line-for2').style.color = 'inherit';
+        }
+
+        btnNext.onclick = () => {
+            const aBoxes = stringADiv.querySelectorAll('.char-box');
+            const tBoxes = stringTDiv.querySelectorAll('.char-box');
+
+            // Reset active states
+            aBoxes.forEach(b => b.classList.remove('active'));
+            tBoxes.forEach(b => b.classList.remove('active'));
+
+            if (currentPhase === 'REVERSING') {
+                document.getElementById('line-for1').style.color = 'var(--accent)';
+                valJ.innerText = j;
+                aBoxes[j].classList.add('active');
+
+                t += a[j];
+                const targetTIndex = a.length - 1 - j;
+                tBoxes[targetTIndex].innerText = a[j];
+                tBoxes[targetTIndex].classList.add('active');
+                tBoxes[targetTIndex].innerHTML += `<span class="index">${targetTIndex}</span>`;
+
+                statusMsg.innerHTML = `Lấy ký tự tại <span class="highlight">a[${j}]</span> là '${a[j]}' đưa vào <span class="highlight">t</span>.`;
+
+                j--;
+                if (j < 0) {
+                    currentPhase = 'MATCHING';
+                    j = 0;
+                    btnNext.innerText = 'Bắt đầu so khớp';
+                }
+            } else if (currentPhase === 'MATCHING') {
+                document.getElementById('line-for1').style.color = 'inherit';
+                document.getElementById('line-for2').style.color = 'var(--accent)';
+                btnNext.innerText = 'Tiếp theo';
+
+                valJ.innerText = j;
+                aBoxes[j].classList.add('active');
+                tBoxes[j].classList.add('active');
+
+                if (a[j] === t[j]) {
+                    num++;
+                    valNum.innerText = num;
+                    aBoxes[j].classList.add('match');
+                    tBoxes[j].classList.add('match');
+                    statusMsg.innerHTML = `<span class="highlight">a[${j}]</span> và <span class="highlight">t[${j}]</span> đều là '${a[j]}' -> <span class="match">Khớp!</span> num tăng lên ${num}.`;
+                } else {
+                    statusMsg.innerHTML = `<span class="highlight">a[${j}]</span> ('${a[j]}') và <span class="highlight">t[${j}]</span> ('${t[j]}') <span class="no-match">Không khớp</span>.`;
+                }
+
+                j++;
+                if (j >= a.length) {
+                    currentPhase = 'DONE';
+                    btnNext.disabled = true;
+                    statusMsg.innerHTML = `<strong>Kết thúc!</strong> Kết quả cuối cùng num = <span class="stat-val">${num}</span>.`;
+                }
+            }
+        };
+
+        btnReset.onclick = init;
+
+        init();
+    </script>
+
+</body>
+
+</html>

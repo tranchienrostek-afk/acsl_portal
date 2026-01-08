@@ -1,0 +1,420 @@
+<!DOCTYPE html>
+<html lang="vi">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Tài liệu LISP - ACSL</title>
+    <link
+        href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;800&family=JetBrains+Mono:wght@400;700&display=swap"
+        rel="stylesheet">
+    <style>
+        :root {
+            --bg: #0f172a;
+            --card: rgba(30, 41, 59, 0.9);
+            --accent: #22c55e;
+            --text: #f1f5f9;
+            --dim: #94a3b8;
+        }
+
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Inter', sans-serif;
+            background: var(--bg);
+            color: var(--text);
+            padding: 30px 15px;
+            line-height: 1.7;
+        }
+
+        .container {
+            max-width: 900px;
+            margin: 0 auto;
+        }
+
+        header {
+            text-align: center;
+            margin-bottom: 40px;
+            padding-bottom: 20px;
+            border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+        }
+
+        h1 {
+            font-size: 2.2rem;
+            background: linear-gradient(to right, #22c55e, #3b82f6);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+        }
+
+        h2 {
+            color: var(--accent);
+            margin: 30px 0 15px;
+            font-size: 1.4rem;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+
+        h3 {
+            color: #60a5fa;
+            margin: 20px 0 10px;
+            font-size: 1.1rem;
+        }
+
+        .card {
+            background: var(--card);
+            border-radius: 16px;
+            padding: 25px;
+            margin-bottom: 20px;
+        }
+
+        .intro {
+            font-size: 1.05rem;
+            color: var(--dim);
+        }
+
+        code {
+            font-family: 'JetBrains Mono', monospace;
+            background: rgba(0, 0, 0, 0.5);
+            padding: 2px 8px;
+            border-radius: 4px;
+            font-size: 0.9rem;
+        }
+
+        .code-block {
+            background: #000;
+            padding: 15px;
+            border-radius: 10px;
+            margin: 15px 0;
+            font-family: 'JetBrains Mono', monospace;
+            font-size: 0.9rem;
+            overflow-x: auto;
+            border-left: 4px solid var(--accent);
+        }
+
+        .func-table {
+            width: 100%;
+            border-collapse: collapse;
+            margin: 15px 0;
+        }
+
+        .func-table th,
+        .func-table td {
+            padding: 12px;
+            text-align: left;
+            border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+        }
+
+        .func-table th {
+            color: var(--accent);
+            background: rgba(0, 0, 0, 0.3);
+        }
+
+        .func-table tr:hover {
+            background: rgba(34, 197, 94, 0.05);
+        }
+
+        .example {
+            background: rgba(34, 197, 94, 0.1);
+            padding: 15px;
+            border-radius: 10px;
+            margin: 10px 0;
+        }
+
+        .example-title {
+            font-weight: 600;
+            color: var(--accent);
+            margin-bottom: 8px;
+        }
+
+        .nav {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 10px;
+            margin-bottom: 30px;
+        }
+
+        .nav a {
+            padding: 8px 16px;
+            background: rgba(255, 255, 255, 0.05);
+            border-radius: 8px;
+            color: var(--text);
+            text-decoration: none;
+            font-size: 0.9rem;
+            transition: 0.2s;
+        }
+
+        .nav a:hover {
+            background: var(--accent);
+            color: #000;
+        }
+
+        .tip {
+            background: rgba(59, 130, 246, 0.1);
+            padding: 15px;
+            border-radius: 10px;
+            border-left: 4px solid #3b82f6;
+            margin: 15px 0;
+        }
+    </style>
+</head>
+
+<body>
+    <div class="container">
+        <header>
+            <h1>📘 Tài liệu LISP - ACSL</h1>
+            <p class="intro">Tổng hợp kiến thức về LISP cho kỳ thi ACSL</p>
+        </header>
+
+        <nav class="nav">
+            <a href="#intro">Giới thiệu</a>
+            <a href="#syntax">Cú pháp</a>
+            <a href="#basic">Hàm cơ bản</a>
+            <a href="#list">Hàm List</a>
+            <a href="#math">Hàm Toán học</a>
+            <a href="#defun">Hàm tự định nghĩa</a>
+            <a href="#examples">Ví dụ</a>
+        </nav>
+
+        <section id="intro" class="card">
+            <h2>🌿 Giới thiệu về LISP</h2>
+            <p>LISP (LISt Processing) là một trong những ngôn ngữ lập trình lâu đời nhất, được phát triển bởi John
+                McCarthy tại MIT vào những năm 1950. Đây là ngôn ngữ chủ đạo trong lĩnh vực Trí tuệ nhân tạo (AI).</p>
+            <div class="tip">
+                <strong>💡 Đặc điểm quan trọng:</strong>
+                <ul style="margin-top: 10px; padding-left: 20px;">
+                    <li>Mọi thứ trong LISP đều là <strong>atom</strong> hoặc <strong>list</strong></li>
+                    <li>NIL vừa là atom vừa là list rỗng</li>
+                    <li>Mọi câu lệnh đều có dạng: <code>(function arg1 arg2 ...)</code></li>
+                </ul>
+            </div>
+        </section>
+
+        <section id="syntax" class="card">
+            <h2>📝 Cú pháp cơ bản</h2>
+            <h3>List</h3>
+            <p>Một list được tạo bằng cách đặt các phần tử trong dấu ngoặc đơn:</p>
+            <div class="code-block">(23 (this is nested) hello 821)</div>
+
+            <h3>Atom</h3>
+            <p>Atom là các phần tử không phải list: số, ký hiệu, chuỗi.</p>
+            <div class="code-block">23, 'hello, "string", NIL</div>
+
+            <h3>Quote (')</h3>
+            <p>Dấu quote <code>'</code> ngăn LISP đánh giá (evaluate) biểu thức:</p>
+            <div class="code-block">'(A B C) ; → Trả về list (A B C), không thực thi</div>
+        </section>
+
+        <section id="basic" class="card">
+            <h2>⚙️ Hàm cơ bản</h2>
+            <table class="func-table">
+                <tr>
+                    <th>Hàm</th>
+                    <th>Mô tả</th>
+                    <th>Ví dụ</th>
+                </tr>
+                <tr>
+                    <td><code>SET</code></td>
+                    <td>Gán giá trị cho biến (cần quote tên biến)</td>
+                    <td><code>(SET 'x 5)</code> → 5</td>
+                </tr>
+                <tr>
+                    <td><code>SETQ</code></td>
+                    <td>Gán giá trị (tự động quote tên biến)</td>
+                    <td><code>(SETQ x 5)</code> → 5</td>
+                </tr>
+                <tr>
+                    <td><code>EVAL</code></td>
+                    <td>Đánh giá biểu thức</td>
+                    <td><code>(EVAL '(ADD 1 2))</code> → 3</td>
+                </tr>
+                <tr>
+                    <td><code>ATOM</code></td>
+                    <td>Kiểm tra có phải atom không</td>
+                    <td><code>(ATOM 'x)</code> → T</td>
+                </tr>
+            </table>
+        </section>
+
+        <section id="list" class="card">
+            <h2>📋 Hàm xử lý List</h2>
+            <table class="func-table">
+                <tr>
+                    <th>Hàm</th>
+                    <th>Mô tả</th>
+                    <th>Ví dụ</th>
+                    <th>Kết quả</th>
+                </tr>
+                <tr>
+                    <td><code>CAR</code></td>
+                    <td>Lấy phần tử đầu tiên</td>
+                    <td><code>(CAR '(A B C))</code></td>
+                    <td>A</td>
+                </tr>
+                <tr>
+                    <td><code>CDR</code></td>
+                    <td>Lấy list bỏ phần tử đầu</td>
+                    <td><code>(CDR '(A B C))</code></td>
+                    <td>(B C)</td>
+                </tr>
+                <tr>
+                    <td><code>CADR</code></td>
+                    <td>= CAR(CDR x)</td>
+                    <td><code>(CADR '(A B C))</code></td>
+                    <td>B</td>
+                </tr>
+                <tr>
+                    <td><code>CADDR</code></td>
+                    <td>= CAR(CDR(CDR x))</td>
+                    <td><code>(CADDR '(A B C))</code></td>
+                    <td>C</td>
+                </tr>
+                <tr>
+                    <td><code>CONS</code></td>
+                    <td>Thêm vào đầu list</td>
+                    <td><code>(CONS 'X '(Y Z))</code></td>
+                    <td>(X Y Z)</td>
+                </tr>
+                <tr>
+                    <td><code>REVERSE</code></td>
+                    <td>Đảo ngược list</td>
+                    <td><code>(REVERSE '(1 2 3))</code></td>
+                    <td>(3 2 1)</td>
+                </tr>
+            </table>
+
+            <div class="tip">
+                <strong>💡 Mẹo nhớ CAR/CDR:</strong><br>
+                CAR = <strong>C</strong>ontents of <strong>A</strong>ddress <strong>R</strong>egister (phần tử đầu)<br>
+                CDR = <strong>C</strong>ontents of <strong>D</strong>ecrement <strong>R</strong>egister (phần còn lại)
+            </div>
+        </section>
+
+        <section id="math" class="card">
+            <h2>🔢 Hàm Toán học</h2>
+            <table class="func-table">
+                <tr>
+                    <th>Hàm</th>
+                    <th>Ký hiệu</th>
+                    <th>Mô tả</th>
+                    <th>Ví dụ</th>
+                    <th>Kết quả</th>
+                </tr>
+                <tr>
+                    <td><code>ADD</code></td>
+                    <td>+</td>
+                    <td>Cộng</td>
+                    <td><code>(ADD 1 2 3)</code></td>
+                    <td>6</td>
+                </tr>
+                <tr>
+                    <td><code>SUB</code></td>
+                    <td>-</td>
+                    <td>Trừ (a - b - c...)</td>
+                    <td><code>(SUB 10 3 2)</code></td>
+                    <td>5</td>
+                </tr>
+                <tr>
+                    <td><code>MULT</code></td>
+                    <td>*</td>
+                    <td>Nhân</td>
+                    <td><code>(MULT 2 3 4)</code></td>
+                    <td>24</td>
+                </tr>
+                <tr>
+                    <td><code>DIV</code></td>
+                    <td>/</td>
+                    <td>Chia</td>
+                    <td><code>(DIV 12 3 2)</code></td>
+                    <td>2</td>
+            </table>
+        </section>
+
+        <section id="defun" class="card">
+            <h2>🔧 Hàm tự định nghĩa (DEF/DEFUN)</h2>
+            <p>LISP cho phép tự định nghĩa hàm bằng <code>DEF</code> hoặc <code>DEFUN</code>:</p>
+            <div class="code-block">(DEF SECOND (args) (CAR (CDR args)))</div>
+            <p>Hàm trên định nghĩa <code>SECOND</code> để lấy phần tử thứ 2 của list.</p>
+
+            <h3>Ví dụ sử dụng</h3>
+            <div class="code-block">(SETQ X '(a c s l))
+                (DEF WHAT(args) (CONS args (REVERSE (CDR args))))
+                (DEF SECOND(args) (CONS (CAR (CDR args)) NIL))</div>
+
+            <table class="func-table">
+                <tr>
+                    <th>Lệnh gọi</th>
+                    <th>Kết quả</th>
+                    <th>Giải thích</th>
+                </tr>
+                <tr>
+                    <td><code>(SECOND X)</code></td>
+                    <td>(C)</td>
+                    <td>CDR X = (c s l), CAR = c, CONS c NIL = (C)</td>
+                </tr>
+                <tr>
+                    <td><code>(WHAT 'Y)</code></td>
+                    <td>(Y)</td>
+                    <td>CDR 'Y lỗi vì Y là atom → trả về (Y)</td>
+                </tr>
+                <tr>
+                    <td><code>(WHAT X)</code></td>
+                    <td>((a c s l) l s c)</td>
+                    <td>REVERSE CDR X = (l s c), CONS X = ((a c s l) l s c)</td>
+                </tr>
+            </table>
+
+            <div class="tip">
+                <strong>💡 Lưu ý:</strong> Trong đề thi ACSL, bạn thường sẽ thấy các hàm tự định nghĩa được khai báo
+                trước, sau đó được gọi với các tham số cụ thể.
+            </div>
+        </section>
+
+        <section id="examples" class="card">
+            <h2>📚 Ví dụ từ đề thi ACSL</h2>
+
+            <div class="example">
+                <div class="example-title">Ví dụ 1</div>
+                <div class="code-block">(MULT (ADD 6 5 0) (MULT 5 1 2 2) (DIV 6 (SUB 2 5)))</div>
+                <p><strong>Giải:</strong></p>
+                <ul style="padding-left: 20px;">
+                    <li>(ADD 6 5 0) = 11</li>
+                    <li>(MULT 5 1 2 2) = 20</li>
+                    <li>(SUB 2 5) = -3</li>
+                    <li>(DIV 6 -3) = -2</li>
+                    <li>(MULT 11 20 -2) = <strong>-440</strong></li>
+                </ul>
+            </div>
+
+            <div class="example">
+                <div class="example-title">Ví dụ 2</div>
+                <div class="code-block">(CDR '((2 (3))(4 (5 6) 7)))</div>
+                <p><strong>Giải:</strong> CDR bỏ phần tử đầu (2 (3)), còn lại: <strong>((4 (5 6) 7))</strong></p>
+            </div>
+
+            <div class="example">
+                <div class="example-title">Ví dụ 3</div>
+                <div class="code-block">(SETQ X '(RI VA FL CA TX))
+                    (CAR (CDR (REVERSE X)))</div>
+                <p><strong>Giải:</strong></p>
+                <ul style="padding-left: 20px;">
+                    <li>X = (RI VA FL CA TX)</li>
+                    <li>REVERSE X = (TX CA FL VA RI)</li>
+                    <li>CDR = (CA FL VA RI)</li>
+                    <li>CAR = <strong>CA</strong></li>
+                </ul>
+            </div>
+        </section>
+
+        <footer style="text-align: center; margin-top: 40px; color: var(--dim); font-size: 0.9rem;">
+            <p>Nguồn: <a href="https://www.categories.acsl.org/wiki/index.php?title=LISP"
+                    style="color: var(--accent);">ACSL Category Descriptions - LISP</a></p>
+        </footer>
+    </div>
+</body>
+
+</html>

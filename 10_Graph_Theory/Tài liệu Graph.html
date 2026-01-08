@@ -1,0 +1,258 @@
+<!DOCTYPE html>
+<html lang="vi">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Tài liệu Graph Theory - ACSL</title>
+    <link
+        href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;800&family=JetBrains+Mono:wght@400;700&display=swap"
+        rel="stylesheet">
+    <style>
+        :root {
+            --bg: #0f172a;
+            --card: rgba(30, 41, 59, 0.9);
+            --accent: #10b981;
+            --text: #f1f5f9;
+            --dim: #94a3b8;
+        }
+
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Inter', sans-serif;
+            background: var(--bg);
+            color: var(--text);
+            padding: 30px 15px;
+            line-height: 1.7;
+        }
+
+        .container {
+            max-width: 900px;
+            margin: 0 auto;
+        }
+
+        header {
+            text-align: center;
+            margin-bottom: 40px;
+            border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+            padding-bottom: 20px;
+        }
+
+        h1 {
+            font-size: 2rem;
+            background: linear-gradient(to right, #10b981, #3b82f6);
+            -webkit-background-clip: text;
+            background-clip: text;
+            -webkit-text-fill-color: transparent;
+        }
+
+        h2 {
+            color: var(--accent);
+            margin: 30px 0 15px;
+            font-size: 1.3rem;
+        }
+
+        .card {
+            background: var(--card);
+            border-radius: 16px;
+            padding: 25px;
+            margin-bottom: 20px;
+        }
+
+        .table {
+            width: 100%;
+            border-collapse: collapse;
+            margin: 15px 0;
+        }
+
+        .table th,
+        .table td {
+            padding: 12px;
+            text-align: left;
+            border: 1px solid rgba(255, 255, 255, 0.1);
+        }
+
+        .table th {
+            background: rgba(16, 185, 129, 0.2);
+            color: var(--accent);
+        }
+
+        .tip {
+            background: rgba(59, 130, 246, 0.1);
+            padding: 15px;
+            border-radius: 10px;
+            border-left: 4px solid #3b82f6;
+            margin: 15px 0;
+        }
+
+        .code-block {
+            background: #000;
+            padding: 15px;
+            border-radius: 10px;
+            margin: 15px 0;
+            font-family: 'JetBrains Mono';
+            border-left: 4px solid var(--accent);
+        }
+
+        .nav {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 10px;
+            margin-bottom: 30px;
+        }
+
+        .nav a {
+            padding: 8px 16px;
+            background: rgba(255, 255, 255, 0.05);
+            border-radius: 8px;
+            color: var(--text);
+            text-decoration: none;
+        }
+
+        .nav a:hover {
+            background: var(--accent);
+            color: #000;
+        }
+    </style>
+</head>
+
+<body>
+    <div class="container">
+        <header>
+            <h1>📘 Tài liệu Graph Theory - ACSL</h1>
+            <p style="color: var(--dim);">Lý thuyết đồ thị cho kỳ thi ACSL</p>
+        </header>
+
+        <nav class="nav">
+            <a href="#overview">Tổng quan</a>
+            <a href="#terminology">Thuật ngữ</a>
+            <a href="#directed">Đồ thị có hướng</a>
+            <a href="#trees">Trees & Forests</a>
+            <a href="#matrix">Ma trận kề</a>
+        </nav>
+
+        <section id="overview" class="card">
+            <h2>🔗 Tổng quan</h2>
+            <p>Đồ thị (Graph) gồm:</p>
+            <ul style="padding-left: 20px; margin: 10px 0;">
+                <li><strong>Vertices (Nodes):</strong> Tập các đỉnh V = {A, B, C, ...}</li>
+                <li><strong>Edges:</strong> Tập các cạnh E = {AB, BC, ...}</li>
+            </ul>
+            <div class="code-block">V = {A, B, C, D, E, F, G}<br>E = {AB, AD, BD, CF, FG, GH, GE, HE}</div>
+        </section>
+
+        <section id="terminology" class="card">
+            <h2>📖 Thuật ngữ</h2>
+            <table class="table">
+                <tr>
+                    <th>Thuật ngữ</th>
+                    <th>Ý nghĩa</th>
+                </tr>
+                <tr>
+                    <td><strong>Path</strong></td>
+                    <td>Đường đi qua các cạnh liên tiếp (VD: FGHE)</td>
+                </tr>
+                <tr>
+                    <td><strong>Simple Path</strong></td>
+                    <td>Đường đi không lặp đỉnh</td>
+                </tr>
+                <tr>
+                    <td><strong>Cycle</strong></td>
+                    <td>Đường đi khép kín (VD: HEGH)</td>
+                </tr>
+                <tr>
+                    <td><strong>Connected</strong></td>
+                    <td>Mọi cặp đỉnh đều có đường đi</td>
+                </tr>
+                <tr>
+                    <td><strong>Connected Component</strong></td>
+                    <td>Thành phần liên thông riêng biệt</td>
+                </tr>
+                <tr>
+                    <td><strong>Complete Graph</strong></td>
+                    <td>Mọi cặp đỉnh đều có cạnh</td>
+                </tr>
+                <tr>
+                    <td><strong>Sparse</strong></td>
+                    <td>Ít cạnh (< V log V)</td>
+                </tr>
+                <tr>
+                    <td><strong>Dense</strong></td>
+                    <td>Nhiều cạnh</td>
+                </tr>
+            </table>
+        </section>
+
+        <section id="directed" class="card">
+            <h2>➡️ Đồ thị có hướng (Directed Graph)</h2>
+            <p>Mỗi cạnh có chiều di chuyển: A→B ≠ B→A</p>
+            <div class="tip">
+                <strong>💡 DAG (Directed Acyclic Graph):</strong> Đồ thị có hướng KHÔNG có chu trình. Thường dùng trong
+                scheduling, dependencies.
+            </div>
+            <div class="code-block">V = {A, B, C, D}<br>E = {AB, AD, DA, DB} (cạnh AD và DA là 2 cạnh khác nhau)</div>
+        </section>
+
+        <section id="trees" class="card">
+            <h2>🌲 Trees & Forests</h2>
+            <table class="table">
+                <tr>
+                    <th>Khái niệm</th>
+                    <th>Định nghĩa</th>
+                    <th>Tính chất</th>
+                </tr>
+                <tr>
+                    <td><strong>Tree</strong></td>
+                    <td>Đồ thị liên thông, không có chu trình</td>
+                    <td>N đỉnh → N-1 cạnh</td>
+                </tr>
+                <tr>
+                    <td><strong>Forest</strong></td>
+                    <td>Tập hợp nhiều cây không liên thông</td>
+                    <td>Nhiều thành phần</td>
+                </tr>
+                <tr>
+                    <td><strong>Spanning Tree</strong></td>
+                    <td>Cây con chứa tất cả đỉnh</td>
+                    <td>Giữ liên thông</td>
+                </tr>
+                <tr>
+                    <td><strong>Weighted Graph</strong></td>
+                    <td>Đồ thị có trọng số trên cạnh</td>
+                    <td>Chi phí/khoảng cách</td>
+                </tr>
+            </table>
+        </section>
+
+        <section id="matrix" class="card">
+            <h2>📊 Ma trận kề (Adjacency Matrix)</h2>
+            <p>Ma trận M[i][j] = 1 nếu có cạnh từ i đến j, ngược lại = 0.</p>
+            <div class="code-block">
+                A B C<br>
+                A | 0 1 1 | ← A kết nối với B và C<br>
+                B | 1 0 0 | ← B kết nối với A<br>
+                C | 1 0 0 | ← C kết nối với A
+            </div>
+            <div class="tip">
+                <strong>📌 Lưu ý:</strong>
+                <ul style="padding-left: 20px; margin-top: 10px;">
+                    <li>Đồ thị <strong>vô hướng</strong>: Ma trận đối xứng</li>
+                    <li>Đồ thị <strong>có hướng</strong>: Có thể không đối xứng</li>
+                    <li>M² cho biết số đường đi độ dài 2</li>
+                </ul>
+            </div>
+        </section>
+
+        <footer style="text-align: center; margin-top: 40px; color: var(--dim);">
+            <p>Nguồn: <a href="http://www.categories.acsl.org/wiki/index.php?title=Graph_Theory"
+                    style="color: var(--accent);">ACSL - Graph Theory</a></p>
+        </footer>
+    </div>
+</body>
+
+</html>

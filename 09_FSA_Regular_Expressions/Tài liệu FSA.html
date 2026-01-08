@@ -1,0 +1,269 @@
+<!DOCTYPE html>
+<html lang="vi">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Tài liệu FSA & Regex - ACSL</title>
+    <link
+        href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;800&family=JetBrains+Mono:wght@400;700&display=swap"
+        rel="stylesheet">
+    <style>
+        :root {
+            --bg: #0f172a;
+            --card: rgba(30, 41, 59, 0.9);
+            --accent: #8b5cf6;
+            --text: #f1f5f9;
+            --dim: #94a3b8;
+        }
+
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Inter', sans-serif;
+            background: var(--bg);
+            color: var(--text);
+            padding: 30px 15px;
+            line-height: 1.7;
+        }
+
+        .container {
+            max-width: 900px;
+            margin: 0 auto;
+        }
+
+        header {
+            text-align: center;
+            margin-bottom: 40px;
+            border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+            padding-bottom: 20px;
+        }
+
+        h1 {
+            font-size: 2rem;
+            background: linear-gradient(to right, #8b5cf6, #06b6d4);
+            -webkit-background-clip: text;
+            background-clip: text;
+            -webkit-text-fill-color: transparent;
+        }
+
+        h2 {
+            color: var(--accent);
+            margin: 30px 0 15px;
+            font-size: 1.3rem;
+        }
+
+        h3 {
+            color: #60a5fa;
+            margin: 20px 0 10px;
+        }
+
+        .card {
+            background: var(--card);
+            border-radius: 16px;
+            padding: 25px;
+            margin-bottom: 20px;
+        }
+
+        code {
+            font-family: 'JetBrains Mono', monospace;
+            background: rgba(0, 0, 0, 0.5);
+            padding: 2px 8px;
+            border-radius: 4px;
+        }
+
+        .code-block {
+            background: #000;
+            padding: 15px;
+            border-radius: 10px;
+            margin: 15px 0;
+            font-family: 'JetBrains Mono';
+            border-left: 4px solid var(--accent);
+        }
+
+        .table {
+            width: 100%;
+            border-collapse: collapse;
+            margin: 15px 0;
+        }
+
+        .table th,
+        .table td {
+            padding: 12px;
+            text-align: left;
+            border: 1px solid rgba(255, 255, 255, 0.1);
+        }
+
+        .table th {
+            background: rgba(139, 92, 246, 0.2);
+            color: var(--accent);
+        }
+
+        .tip {
+            background: rgba(59, 130, 246, 0.1);
+            padding: 15px;
+            border-radius: 10px;
+            border-left: 4px solid #3b82f6;
+            margin: 15px 0;
+        }
+
+        .nav {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 10px;
+            margin-bottom: 30px;
+        }
+
+        .nav a {
+            padding: 8px 16px;
+            background: rgba(255, 255, 255, 0.05);
+            border-radius: 8px;
+            color: var(--text);
+            text-decoration: none;
+        }
+
+        .nav a:hover {
+            background: var(--accent);
+            color: #000;
+        }
+    </style>
+</head>
+
+<body>
+    <div class="container">
+        <header>
+            <h1>📘 Tài liệu FSA & Regular Expressions</h1>
+            <p style="color: var(--dim);">Finite State Automata và Biểu thức chính quy cho ACSL</p>
+        </header>
+
+        <nav class="nav">
+            <a href="#fsa">FSA</a>
+            <a href="#regex">Regex</a>
+            <a href="#operators">Toán tử</a>
+            <a href="#examples">Ví dụ</a>
+        </nav>
+
+        <section id="fsa" class="card">
+            <h2>🔄 Finite State Automaton (FSA)</h2>
+            <p>FSA là mô hình tính toán gồm 4 thành phần:</p>
+            <ul style="padding-left: 20px; margin: 10px 0;">
+                <li><strong>Tập hữu hạn các trạng thái</strong> (states)</li>
+                <li><strong>Quy tắc chuyển tiếp</strong> (transitions)</li>
+                <li><strong>Trạng thái khởi đầu</strong> (initial state) - mũi tên vào</li>
+                <li><strong>Trạng thái kết thúc</strong> (final state) - vòng tròn kép</li>
+            </ul>
+            <div class="tip">
+                <strong>💡 Cách vẽ FSA:</strong>
+                <ul style="padding-left: 20px; margin-top: 10px;">
+                    <li>Trạng thái = vòng tròn với tên bên trong</li>
+                    <li>Final state = vòng tròn kép</li>
+                    <li>Start state = có mũi tên đi vào</li>
+                    <li>Transition = mũi tên có nhãn (ký tự)</li>
+                </ul>
+            </div>
+        </section>
+
+        <section id="regex" class="card">
+            <h2>📝 Regular Expression (Regex)</h2>
+            <p>Regex là biểu diễn đại số của FSA. Mỗi FSA có thể chuyển thành regex và ngược lại.</p>
+
+            <h3>Ví dụ tương đương</h3>
+            <div class="code-block">
+                FSA: A --x--> B --y--> C (với loop x ở B, loop y ở C)<br>
+                Regex: xx*yy* (1+ x theo sau 1+ y)
+            </div>
+        </section>
+
+        <section id="operators" class="card">
+            <h2>⚙️ Toán tử Regex</h2>
+            <table class="table">
+                <tr>
+                    <th>Toán tử</th>
+                    <th>Tên</th>
+                    <th>Ý nghĩa</th>
+                    <th>Ví dụ</th>
+                </tr>
+                <tr>
+                    <td><code>*</code></td>
+                    <td>Kleene Star</td>
+                    <td>0 hoặc nhiều lần</td>
+                    <td>a* = ε, a, aa, aaa...</td>
+                </tr>
+                <tr>
+                    <td><code>+</code></td>
+                    <td>Kleene Plus</td>
+                    <td>1 hoặc nhiều lần</td>
+                    <td>a+ = a, aa, aaa...</td>
+                </tr>
+                <tr>
+                    <td><code>?</code></td>
+                    <td>Optional</td>
+                    <td>0 hoặc 1 lần</td>
+                    <td>a? = ε hoặc a</td>
+                </tr>
+                <tr>
+                    <td><code>|</code></td>
+                    <td>Union</td>
+                    <td>Hoặc</td>
+                    <td>a|b = a hoặc b</td>
+                </tr>
+                <tr>
+                    <td>(concat)</td>
+                    <td>Concatenation</td>
+                    <td>Nối tiếp</td>
+                    <td>ab = a rồi b</td>
+                </tr>
+                <tr>
+                    <td><code>(...)</code></td>
+                    <td>Grouping</td>
+                    <td>Nhóm</td>
+                    <td>(ab)* = ε, ab, abab...</td>
+                </tr>
+            </table>
+
+            <h3>Thứ tự ưu tiên (cao → thấp)</h3>
+            <div class="code-block">1. Kleene Star (*)<br>2. Concatenation<br>3. Union (|)</div>
+        </section>
+
+        <section id="examples" class="card">
+            <h2>📚 Ví dụ từ ACSL</h2>
+            <table class="table">
+                <tr>
+                    <th>Regex</th>
+                    <th>Chuỗi chấp nhận</th>
+                </tr>
+                <tr>
+                    <td><code>xx*yy*</code></td>
+                    <td>xy, xxy, xyy, xxxyy, ...</td>
+                </tr>
+                <tr>
+                    <td><code>dca*b</code></td>
+                    <td>dcb, dcab, dcaab, dcaaab, ...</td>
+                </tr>
+                <tr>
+                    <td><code>d(ca)*b</code></td>
+                    <td>db, dcab, dcacab, dcacacab, ...</td>
+                </tr>
+                <tr>
+                    <td><code>(0|1)*</code></td>
+                    <td>ε, 0, 1, 00, 01, 10, 11, 000, ...</td>
+                </tr>
+                <tr>
+                    <td><code>H(ä|ae?)ndel</code></td>
+                    <td>Händel, Handel, Haendel</td>
+                </tr>
+            </table>
+        </section>
+
+        <footer style="text-align: center; margin-top: 40px; color: var(--dim);">
+            <p>Nguồn: <a href="http://www.categories.acsl.org/wiki/index.php?title=FSAs_and_Regular_Expressions"
+                    style="color: var(--accent);">ACSL - FSAs and Regular Expressions</a></p>
+        </footer>
+    </div>
+</body>
+
+</html>

@@ -1,0 +1,372 @@
+<!DOCTYPE html>
+<html lang="vi">
+
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>ACSL Recursive Functions Quiz</title>
+  <script>
+    window.MathJax = {
+      tex: {
+        inlineMath: [['$', '$'], ['\\(', '\\)']]
+      }
+    };
+  </script>
+  <script id="MathJax-script" async src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-mml-chtml.js"></script>
+  <style>
+    body {
+      font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+      line-height: 1.6;
+      color: #333;
+      max-width: 800px;
+      margin: 0 auto;
+      padding: 20px;
+      background-color: #f4f6f9;
+    }
+
+    h1 {
+      text-align: center;
+      color: #2c3e50;
+      margin-bottom: 30px;
+    }
+
+    .quiz-card {
+      background: white;
+      border-radius: 8px;
+      box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
+      padding: 25px;
+      margin-bottom: 25px;
+      border-left: 5px solid #3498db;
+    }
+
+    .question-title {
+      font-size: 1.1em;
+      font-weight: bold;
+      margin-bottom: 15px;
+      color: #2980b9;
+    }
+
+    .question-text {
+      font-size: 1.1em;
+      margin-bottom: 20px;
+    }
+
+    .options-grid {
+      display: grid;
+      grid-template-columns: 1fr;
+      gap: 10px;
+    }
+
+    .option-btn {
+      padding: 12px 15px;
+      border: 2px solid #e0e0e0;
+      background: #fff;
+      border-radius: 6px;
+      cursor: pointer;
+      text-align: left;
+      font-size: 1em;
+      transition: all 0.2s;
+    }
+
+    .option-btn:hover:not(:disabled) {
+      background-color: #f1f8ff;
+      border-color: #bdc3c7;
+    }
+
+    .option-btn.correct {
+      background-color: #d4edda;
+      border-color: #28a745;
+      color: #155724;
+    }
+
+    .option-btn.incorrect {
+      background-color: #f8d7da;
+      border-color: #dc3545;
+      color: #721c24;
+    }
+
+    .feedback-section {
+      margin-top: 15px;
+      display: none;
+      animation: fadeIn 0.5s;
+    }
+
+    .rationale {
+      background-color: #e8f4fd;
+      padding: 15px;
+      border-radius: 6px;
+      border-left: 4px solid #3498db;
+      margin-top: 10px;
+      font-size: 0.95em;
+    }
+
+    .hint-btn {
+      background: none;
+      border: none;
+      color: #f39c12;
+      cursor: pointer;
+      font-size: 0.9em;
+      text-decoration: underline;
+      margin-top: 10px;
+      display: inline-block;
+    }
+
+    .hint-text {
+      display: none;
+      color: #7f8c8d;
+      font-style: italic;
+      font-size: 0.9em;
+      margin-top: 5px;
+    }
+
+    .score-board {
+      position: fixed;
+      bottom: 20px;
+      right: 20px;
+      background: #2c3e50;
+      color: white;
+      padding: 15px 25px;
+      border-radius: 50px;
+      box-shadow: 0 4px 15px rgba(0, 0, 0, 0.2);
+      font-weight: bold;
+      z-index: 1000;
+    }
+
+    @keyframes fadeIn {
+      from {
+        opacity: 0;
+      }
+
+      to {
+        opacity: 1;
+      }
+    }
+  </style>
+</head>
+
+<body>
+
+  <h1>Luyện tập: Hàm Đệ Quy (ACSL)</h1>
+
+  <div id="quiz-container"></div>
+  <div class="score-board">Điểm: <span id="score">0</span> / 10</div>
+
+  <script>
+    // Dữ liệu câu hỏi từ JSON
+    const quizData = {
+      "questions": [
+        {
+          "questionNumber": 1,
+          "question": "Trong một hàm đệ quy, vai trò của 'trường hợp cơ sở' (base case) là gì?",
+          "answerOptions": [
+            { "text": "Để đảm bảo hàm gọi chính nó ít nhất một lần.", "rationale": "Đây là vai trò của bước đệ quy, không phải trường hợp cơ sở.", "isCorrect": false },
+            { "text": "Để ngăn chặn việc đệ quy vô hạn bằng cách cung cấp điều kiện dừng.", "rationale": "Chính xác! Trường hợp cơ sở xác định khi nào hàm ngừng gọi chính nó.", "isCorrect": true },
+            { "text": "Để tăng tốc độ tính toán của máy tính.", "rationale": "Trường hợp cơ sở là về logic thuật toán, không phải tối ưu phần cứng.", "isCorrect": false },
+            { "text": "Để định nghĩa các biến cục bộ.", "rationale": "Sai, việc định nghĩa biến không liên quan trực tiếp đến khái niệm này.", "isCorrect": false }
+          ],
+          "hint": "Hãy nghĩ về điều gì sẽ xảy ra nếu bạn đứng giữa hai chiếc gương đối diện nhau mà không có gì chặn tầm nhìn."
+        },
+        {
+          "questionNumber": 2,
+          "question": "Cho hàm đệ quy sau: $f(x) = f(x-1) + 2$ với $f(0) = 1$. Giá trị của $f(3)$ là bao nhiêu?",
+          "answerOptions": [
+            { "text": "5", "rationale": "Nếu tính thiếu một bước, bạn có thể ra 5 ($f(2)$).", "isCorrect": false },
+            { "text": "7", "rationale": "Chính xác! $f(3) \\to f(2)+2 \\to (f(1)+2)+2 \\to ((f(0)+2)+2)+2 = 1+2+2+2 = 7$.", "isCorrect": true },
+            { "text": "6", "rationale": "Sai. Kiểm tra lại phép cộng.", "isCorrect": false },
+            { "text": "9", "rationale": "Sai. Đây là kết quả nếu bạn thực hiện thêm một bước đệ quy $f(4)$.", "isCorrect": false }
+          ],
+          "hint": "Hãy tính lần lượt từ $f(1)$, sau đó đến $f(2)$, và cuối cùng là $f(3)$ dựa trên $f(0)$."
+        },
+        {
+          "questionNumber": 3,
+          "question": "Cho hàm Fibonacci: $F(n) = F(n-1) + F(n-2)$ với $F(0) = 0, F(1) = 1$. Giá trị của $F(5)$ là bao nhiêu?",
+          "answerOptions": [
+            { "text": "3", "rationale": "Đây là giá trị của $F(4)$.", "isCorrect": false },
+            { "text": "5", "rationale": "Chính xác! Dãy số: 0, 1, 1, 2, 3, 5.", "isCorrect": true },
+            { "text": "8", "rationale": "Đây là giá trị của $F(6)$.", "isCorrect": false },
+            { "text": "4", "rationale": "Sai. Số Fibonacci không tăng tuyến tính.", "isCorrect": false }
+          ],
+          "hint": "Viết dãy số ra giấy: 0, 1, ... và cộng hai số liền trước để tìm số tiếp theo."
+        },
+        {
+          "questionNumber": 4,
+          "question": "Tìm giá trị của $g(7)$ biết: $g(x) = \\begin{cases} g(x-2) + 1 & \\text{nếu } x > 1 \\\\ x & \\text{nếu } x \\le 1 \\end{cases}$",
+          "answerOptions": [
+            { "text": "3", "rationale": "Sai. Giá trị này quá nhỏ.", "isCorrect": false },
+            { "text": "4", "rationale": "Chính xác! $g(7) \\to g(5)+1 \\to g(3)+2 \\to g(1)+3$. Tại $x=1$, trả về 1. Tổng là $1+3=4$.", "isCorrect": true },
+            { "text": "5", "rationale": "Sai. Có thể bạn đã tính nhầm bước cơ sở.", "isCorrect": false },
+            { "text": "7", "rationale": "Sai. Hàm này không trả về x trực tiếp.", "isCorrect": false }
+          ],
+          "hint": "Hàm số giảm x đi 2 đơn vị mỗi lần gọi cho đến khi x nhỏ hơn hoặc bằng 1."
+        },
+        {
+          "questionNumber": 5,
+          "question": "Đệ quy gián tiếp (Indirect recursion) xảy ra khi nào?",
+          "answerOptions": [
+            { "text": "Hàm A gọi hàm A.", "rationale": "Đây là đệ quy trực tiếp.", "isCorrect": false },
+            { "text": "Hàm A gọi hàm B, và hàm B gọi lại hàm A.", "rationale": "Chính xác! Vòng lặp A -> B -> A tạo thành đệ quy gián tiếp.", "isCorrect": true },
+            { "text": "Hàm A gọi hàm B, và hàm B gọi hàm C.", "rationale": "Đây chỉ là chuỗi gọi hàm thông thường.", "isCorrect": false },
+            { "text": "Hàm không có trường hợp cơ sở.", "rationale": "Đây là nguyên nhân gây lỗi Stack Overflow.", "isCorrect": false }
+          ],
+          "hint": "Nó giống như việc bạn nhờ bạn A, bạn A lại nhờ bạn B, rồi bạn B quay lại hỏi bạn."
+        },
+        {
+          "questionNumber": 6,
+          "question": "Tìm $h(4, 2)$ với định nghĩa: $h(x, y) = \\begin{cases} h(x-y, y-1) + 2 & \\text{nếu } x > y \\\\ x + y & \\text{trường hợp khác} \\end{cases}$",
+          "answerOptions": [
+            { "text": "6", "rationale": "Sai.", "isCorrect": false },
+            { "text": "7", "rationale": "Sai.", "isCorrect": false },
+            { "text": "5", "rationale": "Chính xác! $h(4,2) \\to h(2,1)+2$. Tại đây $2>1$ tiếp tục $\\to h(1,0)+2$. Tổng cộng = 5 (giả sử điểm dừng phù hợp).", "isCorrect": true },
+            { "text": "3", "rationale": "Sai.", "isCorrect": false }
+          ],
+          "hint": "Hãy tính cẩn thận từng bước và chú ý điều kiện so sánh x và y."
+        },
+        {
+          "questionNumber": 7,
+          "question": "Cho hàm $k(x) = \\begin{cases} k(x+2) & \\text{nếu } x < 0 \\\\ 3x & \\text{nếu } 0 \\le x \\le 5 \\\\ k(x-3) & \\text{nếu } x > 5 \\end{cases}$. Tìm $k(-2)$.",
+          "answerOptions": [
+            { "text": "-6", "rationale": "Sai.", "isCorrect": false },
+            { "text": "0", "rationale": "Chính xác! $k(-2) \\to k(0)$ (do $x<0$). Tại $k(0)$, trả về $3(0) = 0$.", "isCorrect": true },
+            { "text": "6", "rationale": "Sai.", "isCorrect": false },
+            { "text": "3", "rationale": "Sai.", "isCorrect": false }
+          ],
+          "hint": "Đây là hàm nhảy vùng. x=-2 nhỏ hơn 0, nên nó sẽ được cộng thêm 2."
+        },
+        {
+          "questionNumber": 8,
+          "question": "Điều gì sẽ xảy ra nếu hàm đệ quy không bao giờ đạt đến 'trường hợp cơ sở'?",
+          "answerOptions": [
+            { "text": "Hàm sẽ trả về giá trị 0.", "rationale": "Sai.", "isCorrect": false },
+            { "text": "Gây ra lỗi tràn bộ nhớ (Stack Overflow).", "rationale": "Chính xác! Bộ nhớ stack sẽ bị đầy.", "isCorrect": true },
+            { "text": "Hàm sẽ tự động dừng sau 100 lần gọi.", "rationale": "Sai. Máy tính không tự dừng.", "isCorrect": false },
+            { "text": "Máy tính sẽ tắt nguồn.", "rationale": "Sai.", "isCorrect": false }
+          ],
+          "hint": "Hãy nghĩ về thuật ngữ nổi tiếng thường gặp khi lập trình."
+        },
+        {
+          "questionNumber": 9,
+          "question": "Bài toán sơn hình vuông cạnh 4. Nếu cạnh $\\ge 2$, chia 4, sơn 1, 3 cái còn lại làm tiếp. Tổng diện tích sơn?",
+          "answerOptions": [
+            { "text": "4", "rationale": "Chưa đủ, đây mới là lớp đầu tiên.", "isCorrect": false },
+            { "text": "7", "rationale": "Chính xác! Lớp 1 sơn $2^2=4$. Còn 3 hình cạnh 2 chia tiếp ra cạnh 1, sơn $1^2 \\times 3 = 3$. Tổng = 7.", "isCorrect": true },
+            { "text": "16", "rationale": "Sai.", "isCorrect": false },
+            { "text": "13", "rationale": "Sai.", "isCorrect": false }
+          ],
+          "hint": "Tính diện tích sơn ở lớp thứ nhất, sau đó cộng thêm phần sơn ở các hình con."
+        },
+        {
+          "questionNumber": 10,
+          "question": "Cho $A(n) = A(n-1) + A(n-2) + A(n-3)$ với $A(0)=1, A(1)=1, A(2)=1$. Tìm $A(4)$.",
+          "answerOptions": [
+            { "text": "3", "rationale": "Đây là $A(3)$.", "isCorrect": false },
+            { "text": "5", "rationale": "Chính xác! $A(3)=3$. $A(4) = 3+1+1 = 5$.", "isCorrect": true },
+            { "text": "9", "rationale": "Sai.", "isCorrect": false },
+            { "text": "6", "rationale": "Sai.", "isCorrect": false }
+          ],
+          "hint": "Hãy tính A(3) trước, sau đó dùng nó để tính A(4)."
+        }
+      ]
+    };
+
+    let currentScore = 0;
+
+    function renderQuiz() {
+      const container = document.getElementById('quiz-container');
+
+      quizData.questions.forEach((q, index) => {
+        const card = document.createElement('div');
+        card.className = 'quiz-card';
+
+        // Tiêu đề câu hỏi
+        const title = document.createElement('div');
+        title.className = 'question-title';
+        title.innerText = `Câu ${q.questionNumber}:`;
+        card.appendChild(title);
+
+        // Nội dung câu hỏi
+        const text = document.createElement('div');
+        text.className = 'question-text';
+        text.innerHTML = q.question; // Dùng innerHTML để render MathJax nếu cần
+        card.appendChild(text);
+
+        // Grid chứa các lựa chọn
+        const optionsGrid = document.createElement('div');
+        optionsGrid.className = 'options-grid';
+
+        // Feedback container
+        const feedbackSection = document.createElement('div');
+        feedbackSection.className = 'feedback-section';
+        const rationaleDiv = document.createElement('div');
+        rationaleDiv.className = 'rationale';
+        feedbackSection.appendChild(rationaleDiv);
+
+        let answered = false;
+
+        q.answerOptions.forEach(opt => {
+          const btn = document.createElement('button');
+          btn.className = 'option-btn';
+          btn.innerText = opt.text;
+
+          btn.onclick = () => {
+            if (answered) return;
+            answered = true;
+
+            // Disable all buttons in this card
+            const allBtns = optionsGrid.querySelectorAll('.option-btn');
+            allBtns.forEach(b => b.disabled = true);
+
+            // Show rationale
+            rationaleDiv.innerHTML = `<strong>Giải thích:</strong> ${opt.rationale}`;
+            feedbackSection.style.display = 'block';
+
+            if (opt.isCorrect) {
+              btn.classList.add('correct');
+              currentScore++;
+              document.getElementById('score').innerText = currentScore;
+            } else {
+              btn.classList.add('incorrect');
+              // Highlight correct answer
+              const correctOptIndex = q.answerOptions.findIndex(o => o.isCorrect);
+              if (correctOptIndex !== -1) {
+                allBtns[correctOptIndex].classList.add('correct');
+              }
+            }
+          };
+          optionsGrid.appendChild(btn);
+        });
+
+        card.appendChild(optionsGrid);
+
+        // Hint section
+        if (q.hint) {
+          const hintBtn = document.createElement('button');
+          hintBtn.className = 'hint-btn';
+          hintBtn.innerText = '💡 Xem gợi ý';
+          const hintText = document.createElement('div');
+          hintText.className = 'hint-text';
+          hintText.innerText = q.hint;
+
+          hintBtn.onclick = () => {
+            hintText.style.display = hintText.style.display === 'block' ? 'none' : 'block';
+          };
+
+          card.appendChild(hintBtn);
+          card.appendChild(hintText);
+        }
+
+        card.appendChild(feedbackSection);
+        container.appendChild(card);
+      });
+
+      // Render MathJax lại sau khi DOM được tạo
+      if (window.MathJax) {
+        MathJax.typesetPromise();
+      }
+    }
+
+    // Khởi chạy quiz
+    window.onload = renderQuiz;
+  </script>
+</body>
+
+</html>

@@ -1,0 +1,364 @@
+<!DOCTYPE html>
+<html lang="vi">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Mô phỏng Assembly - ACSL</title>
+    <link
+        href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;800&family=JetBrains+Mono:wght@400;700&display=swap"
+        rel="stylesheet">
+    <style>
+        :root {
+            --bg: #0a0a0f;
+            --card: rgba(20, 20, 30, 0.9);
+            --accent: #06b6d4;
+            --text: #f1f5f9;
+            --dim: #94a3b8;
+            --run: #22c55e;
+        }
+
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Inter', sans-serif;
+            background: var(--bg);
+            color: var(--text);
+            padding: 30px 15px;
+        }
+
+        .container {
+            max-width: 1000px;
+            margin: 0 auto;
+        }
+
+        header {
+            text-align: center;
+            margin-bottom: 30px;
+        }
+
+        h1 {
+            font-size: 2rem;
+            background: linear-gradient(to right, #06b6d4, #8b5cf6);
+            -webkit-background-clip: text;
+            background-clip: text;
+            -webkit-text-fill-color: transparent;
+        }
+
+        h2 {
+            color: var(--accent);
+            margin: 20px 0 15px;
+            font-size: 1.2rem;
+        }
+
+        .card {
+            background: var(--card);
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            border-radius: 16px;
+            padding: 20px;
+            margin-bottom: 20px;
+        }
+
+        .grid {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 20px;
+        }
+
+        @media (max-width: 700px) {
+            .grid {
+                grid-template-columns: 1fr;
+            }
+        }
+
+        textarea {
+            width: 100%;
+            height: 250px;
+            background: #000;
+            border: 1px solid rgba(255, 255, 255, 0.2);
+            border-radius: 10px;
+            padding: 15px;
+            font-family: 'JetBrains Mono', monospace;
+            font-size: 0.9rem;
+            color: var(--text);
+            resize: vertical;
+        }
+
+        textarea:focus {
+            outline: none;
+            border-color: var(--accent);
+        }
+
+        .controls {
+            display: flex;
+            gap: 10px;
+            margin: 15px 0;
+        }
+
+        button {
+            padding: 10px 20px;
+            border-radius: 8px;
+            border: none;
+            background: var(--accent);
+            color: #fff;
+            font-weight: 600;
+            cursor: pointer;
+        }
+
+        button.run {
+            background: var(--run);
+        }
+
+        .state-panel {
+            background: #000;
+            border-radius: 10px;
+            padding: 15px;
+        }
+
+        .state-row {
+            display: flex;
+            justify-content: space-between;
+            padding: 8px 0;
+            border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+        }
+
+        .state-label {
+            color: var(--dim);
+        }
+
+        .state-value {
+            font-family: 'JetBrains Mono', monospace;
+            color: var(--accent);
+            font-weight: 700;
+        }
+
+        .memory-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(120px, 1fr));
+            gap: 10px;
+            margin-top: 10px;
+        }
+
+        .mem-cell {
+            background: rgba(255, 255, 255, 0.05);
+            padding: 8px;
+            border-radius: 6px;
+            text-align: center;
+        }
+
+        .mem-label {
+            font-size: 0.8rem;
+            color: var(--dim);
+        }
+
+        .mem-value {
+            font-family: 'JetBrains Mono', monospace;
+            font-weight: 700;
+        }
+
+        .output-box {
+            background: #000;
+            border-radius: 10px;
+            padding: 15px;
+            min-height: 100px;
+            font-family: 'JetBrains Mono', monospace;
+        }
+
+        .line-highlight {
+            color: var(--run);
+        }
+
+        .error {
+            color: #ef4444;
+        }
+    </style>
+</head>
+
+<body>
+    <div class="container">
+        <header>
+            <h1>💻 Mô phỏng Assembly Language</h1>
+            <p style="color: var(--dim);">ACSL Assembly Language Interpreter</p>
+        </header>
+
+        <div class="grid">
+            <div class="card">
+                <h2>📝 Mã nguồn Assembly</h2>
+                <textarea id="code">       LOAD  A
+       ADD   B
+       STORE C
+       PRINT C
+       END
+A      DC    5
+B      DC    3
+C      DC    0</textarea>
+                <div class="controls">
+                    <button class="run" onclick="runProgram()">▶ Chạy</button>
+                    <button onclick="stepProgram()">→ Step</button>
+                    <button onclick="resetProgram()">↺ Reset</button>
+                </div>
+                <select id="examples" onchange="loadExample()"
+                    style="padding: 10px; background: #1e293b; color: #fff; border: none; border-radius: 8px;">
+                    <option value="">-- Chọn ví dụ --</option>
+                    <option value="add">Cộng 2 số</option>
+                    <option value="loop">Vòng lặp đếm</option>
+                    <option value="branch">Rẽ nhánh</option>
+                </select>
+            </div>
+
+            <div class="card">
+                <h2>⚙️ Trạng thái CPU</h2>
+                <div class="state-panel">
+                    <div class="state-row"><span class="state-label">ACC (Accumulator)</span><span class="state-value"
+                            id="acc">0</span></div>
+                    <div class="state-row"><span class="state-label">PC (Program Counter)</span><span
+                            class="state-value" id="pc">0</span></div>
+                    <div class="state-row"><span class="state-label">Status</span><span class="state-value"
+                            id="status">Ready</span></div>
+                </div>
+
+                <h2>📦 Memory</h2>
+                <div class="memory-grid" id="memory"></div>
+            </div>
+        </div>
+
+        <div class="card">
+            <h2>📤 Output</h2>
+            <div class="output-box" id="output"></div>
+        </div>
+    </div>
+
+    <script>
+        const examples = {
+            add: `       LOAD  A
+       ADD   B
+       STORE C
+       PRINT C
+       END
+A      DC    5
+B      DC    3
+C      DC    0`,
+            loop: `       LOAD  =0
+       STORE SUM
+LOOP   LOAD  SUM
+       ADD   =1
+       STORE SUM
+       LOAD  SUM
+       SUB   =5
+       BL    LOOP
+       PRINT SUM
+       END
+SUM    DC    0`,
+            branch: `       LOAD  X
+       BG    POS
+       LOAD  =0
+       BU    DONE
+POS    LOAD  =1
+DONE   PRINT X
+       END
+X      DC    10`
+        };
+
+        let acc = 0, pc = 0, memory = {}, running = false, lines = [];
+
+        function loadExample() {
+            const sel = document.getElementById('examples').value;
+            if (sel && examples[sel]) {
+                document.getElementById('code').value = examples[sel];
+                resetProgram();
+            }
+        }
+
+        function parse() {
+            lines = [];
+            memory = {};
+            const code = document.getElementById('code').value.split('\n');
+            code.forEach((line, i) => {
+                const trimmed = line.trim();
+                if (!trimmed) return;
+                const parts = trimmed.split(/\s+/);
+                let label = '', opcode = '', loc = '';
+                if (parts[0] && !['LOAD', 'STORE', 'ADD', 'SUB', 'MULT', 'DIV', 'BG', 'BE', 'BL', 'BU', 'PRINT', 'READ', 'DC', 'END'].includes(parts[0].toUpperCase())) {
+                    label = parts[0];
+                    opcode = parts[1] || '';
+                    loc = parts[2] || '';
+                } else {
+                    opcode = parts[0];
+                    loc = parts[1] || '';
+                }
+                lines.push({ label, opcode: opcode.toUpperCase(), loc, lineNum: i });
+                if (label && opcode.toUpperCase() === 'DC') {
+                    memory[label] = parseInt(loc) || 0;
+                }
+            });
+        }
+
+        function execute(step = false) {
+            if (pc >= lines.length) { document.getElementById('status').innerText = 'Ended'; return false; }
+            const instr = lines[pc];
+            if (instr.opcode === 'END') { document.getElementById('status').innerText = 'Ended'; return false; }
+
+            const getLoc = () => {
+                if (instr.loc.startsWith('=')) return parseInt(instr.loc.slice(1));
+                return memory[instr.loc] || 0;
+            };
+
+            switch (instr.opcode) {
+                case 'LOAD': acc = getLoc(); break;
+                case 'STORE': memory[instr.loc] = acc; break;
+                case 'ADD': acc += getLoc(); break;
+                case 'SUB': acc -= getLoc(); break;
+                case 'MULT': acc *= getLoc(); break;
+                case 'DIV': acc = Math.floor(acc / getLoc()); break;
+                case 'BG': if (acc > 0) { pc = lines.findIndex(l => l.label === instr.loc) - 1; } break;
+                case 'BE': if (acc === 0) { pc = lines.findIndex(l => l.label === instr.loc) - 1; } break;
+                case 'BL': if (acc < 0) { pc = lines.findIndex(l => l.label === instr.loc) - 1; } break;
+                case 'BU': pc = lines.findIndex(l => l.label === instr.loc) - 1; break;
+                case 'PRINT': document.getElementById('output').innerHTML += getLoc() + '<br>'; break;
+                case 'DC': break;
+                default: break;
+            }
+            pc++;
+            updateUI();
+            return true;
+        }
+
+        function runProgram() {
+            resetProgram();
+            parse();
+            document.getElementById('status').innerText = 'Running...';
+            let safety = 0;
+            while (execute() && safety++ < 1000) { }
+        }
+
+        function stepProgram() {
+            if (pc === 0) { parse(); }
+            execute(true);
+        }
+
+        function resetProgram() {
+            acc = 0; pc = 0; memory = {}; running = false;
+            document.getElementById('output').innerHTML = '';
+            updateUI();
+            document.getElementById('status').innerText = 'Ready';
+        }
+
+        function updateUI() {
+            document.getElementById('acc').innerText = acc;
+            document.getElementById('pc').innerText = pc;
+            let memHtml = '';
+            for (const [k, v] of Object.entries(memory)) {
+                memHtml += `<div class="mem-cell"><div class="mem-label">${k}</div><div class="mem-value">${v}</div></div>`;
+            }
+            document.getElementById('memory').innerHTML = memHtml;
+        }
+
+        resetProgram();
+    </script>
+</body>
+
+</html>

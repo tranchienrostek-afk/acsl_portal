@@ -1,0 +1,428 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Mô phỏng Tiền tố sang Trung tố</title>
+    <style>
+        :root {
+            --bg-grad-start: #2c003e; /* Tông tím đậm */
+            --bg-grad-end: #0f172a;
+            --card-bg: rgba(30, 41, 59, 0.75);
+            --primary: #8b5cf6; /* Tím */
+            --accent: #f43f5e; /* Hồng */
+            --operand-col: #3b82f6; /* Xanh dương */
+            --operator-col: #f59e0b; /* Cam */
+            --complex-col: #10b981; /* Xanh lá cho biểu thức gộp */
+            --text-main: #f1f5f9;
+        }
+
+        body {
+            font-family: 'Segoe UI', Roboto, Helvetica, Arial, sans-serif;
+            background-image: linear-gradient(135deg, var(--bg-grad-start), var(--bg-grad-end));
+            color: var(--text-main);
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            min-height: 100vh;
+            margin: 0;
+            padding: 20px;
+        }
+
+        h1 { margin-bottom: 5px; font-weight: 300; letter-spacing: 1.5px; text-transform: uppercase; }
+        .subtitle { color: #94a3b8; margin-bottom: 25px; font-style: italic; }
+
+        .container {
+            width: 100%;
+            max-width: 900px;
+            background: var(--card-bg);
+            backdrop-filter: blur(12px);
+            border-radius: 20px;
+            border: 1px solid rgba(255,255,255,0.1);
+            padding: 30px;
+            box-shadow: 0 20px 60px rgba(0, 0, 0, 0.6);
+        }
+
+        /* Controls */
+        .controls {
+            display: flex;
+            gap: 10px;
+            margin-bottom: 30px;
+        }
+
+        input {
+            flex-grow: 1;
+            padding: 14px 20px;
+            border-radius: 10px;
+            border: 1px solid #475569;
+            background: rgba(15, 23, 42, 0.8);
+            color: white;
+            font-size: 1.2rem;
+            letter-spacing: 3px;
+            outline: none;
+            transition: 0.3s;
+            text-align: center;
+        }
+
+        input:focus { border-color: var(--primary); box-shadow: 0 0 15px rgba(139, 92, 246, 0.3); }
+
+        button {
+            padding: 0 30px;
+            border-radius: 10px;
+            border: none;
+            font-weight: 600;
+            font-size: 1rem;
+            cursor: pointer;
+            transition: all 0.2s;
+            color: white;
+        }
+
+        button:active { transform: scale(0.95); }
+        .btn-start { background: linear-gradient(to right, var(--primary), #6366f1); }
+        .btn-step { background: linear-gradient(to right, var(--accent), #e11d48); display: none; }
+        .btn-reset { background: #475569; display: none; }
+
+        /* Visualization Area */
+        .viz-area {
+            display: grid;
+            grid-template-columns: 1fr 250px; /* Stack rộng hơn để chứa chuỗi dài */
+            gap: 25px;
+            margin-bottom: 20px;
+        }
+
+        .section-header {
+            text-align: center;
+            color: #cbd5e1;
+            margin-bottom: 10px;
+            font-size: 0.85rem;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 0 10px;
+        }
+
+        .box {
+            background: rgba(0,0,0,0.25);
+            border-radius: 15px;
+            padding: 20px;
+            min-height: 120px;
+            border: 2px dashed #334155;
+            transition: all 0.3s;
+            position: relative;
+        }
+
+        /* Source String Box */
+        #sourceBox {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 10px;
+            align-content: center;
+            justify-content: center;
+        }
+
+        /* Stack Box */
+        #stackBox {
+            display: flex;
+            flex-direction: column-reverse; /* Stack grows up */
+            justify-content: flex-start;
+            gap: 10px;
+            min-height: 300px;
+            overflow-y: auto;
+            align-items: center;
+        }
+
+        /* Items */
+        .item {
+            padding: 10px 15px;
+            border-radius: 8px;
+            font-weight: bold;
+            font-size: 1.2rem;
+            color: white;
+            box-shadow: 0 4px 6px rgba(0,0,0,0.3);
+            animation: popIn 0.4s cubic-bezier(0.34, 1.56, 0.64, 1);
+            display: inline-block;
+            min-width: 30px;
+            text-align: center;
+        }
+
+        .item.operand { background: var(--operand-col); }
+        .item.operator { background: var(--operator-col); }
+        .item.complex { 
+            background: var(--complex-col); 
+            font-size: 1rem; 
+            border: 1px solid rgba(255,255,255,0.3);
+            width: 90%; /* Chiếm chiều rộng stack */
+            word-break: break-all;
+        }
+        
+        .item.highlight { 
+            transform: scale(1.2); 
+            box-shadow: 0 0 20px var(--accent); 
+            border: 2px solid white; 
+            z-index: 10;
+        }
+        
+        .item.processed { opacity: 0.2; filter: grayscale(1); transform: scale(0.9); }
+
+        /* Arrow Indicator for Scanning Direction */
+        .scan-direction {
+            color: var(--accent);
+            font-weight: bold;
+            font-size: 0.9rem;
+        }
+
+        /* Log */
+        .log-box {
+            background: #0f172a;
+            color: #10b981;
+            font-family: 'Consolas', 'Courier New', monospace;
+            padding: 15px;
+            border-radius: 10px;
+            height: 100px;
+            overflow-y: auto;
+            border-left: 5px solid var(--primary);
+            line-height: 1.6;
+            font-size: 0.95rem;
+        }
+
+        .final-result {
+            grid-column: 1 / -1;
+            background: rgba(16, 185, 129, 0.2);
+            border: 1px solid var(--complex-col);
+            color: #34d399;
+            padding: 20px;
+            text-align: center;
+            font-size: 1.5rem;
+            border-radius: 15px;
+            display: none;
+            animation: fadeIn 0.5s ease;
+        }
+
+        @keyframes popIn { from { transform: scale(0); opacity: 0; } to { transform: scale(1); opacity: 1; } }
+        @keyframes fadeIn { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: translateY(0); } }
+
+    </style>
+</head>
+<body>
+
+    <h1>Prefix <span style="color:var(--accent)">➔</span> Infix</h1>
+    <div class="subtitle">Giải thuật chuyển đổi Tiền tố sang Trung tố (Duyệt từ phải sang trái)</div>
+
+    <div class="container">
+        <div class="controls">
+            <input type="text" id="inputExpr" value="*+AB-CD" placeholder="Nhập tiền tố (VD: +*AB/CD)">
+            <button class="btn-start" onclick="init()">Bắt đầu</button>
+            <button class="btn-step" id="btnStep" onclick="nextStep()">Bước tiếp theo</button>
+            <button class="btn-reset" id="btnReset" onclick="reset()">Làm lại</button>
+        </div>
+
+        <div class="viz-area">
+            <div>
+                <div class="section-header">
+                    <span>Chuỗi Tiền tố</span>
+                    <span class="scan-direction">Duyệt: Phải <span style="font-size:1.2em">←</span> Trái</span>
+                </div>
+                <div class="box" id="sourceBox"></div>
+            </div>
+
+            <div>
+                <div class="section-header">
+                    <span>Stack (Ngăn xếp)</span>
+                    <span>LIFO</span>
+                </div>
+                <div class="box" id="stackBox"></div>
+            </div>
+
+            <div id="finalResultBox" class="final-result"></div>
+        </div>
+
+        <div class="log-box" id="logBox">
+            > Chào bạn! Hãy nhập biểu thức Tiền tố và nhấn "Bắt đầu".<br>
+            > Lưu ý: Thuật toán sẽ duyệt từ cuối chuỗi về đầu chuỗi.
+        </div>
+    </div>
+
+    <script>
+        let steps = [];
+        let currentStepIndex = 0;
+        
+        const elInput = document.getElementById('inputExpr');
+        const elSource = document.getElementById('sourceBox');
+        const elStack = document.getElementById('stackBox');
+        const elLog = document.getElementById('logBox');
+        const elFinal = document.getElementById('finalResultBox');
+        
+        const btnStart = document.querySelector('.btn-start');
+        const btnStep = document.getElementById('btnStep');
+        const btnReset = document.getElementById('btnReset');
+
+        function isOperator(c) {
+            return ['+', '-', '*', '/', '^'].includes(c);
+        }
+
+        function log(msg) {
+            elLog.innerHTML = `> ${msg}<br>` + elLog.innerHTML;
+        }
+
+        function createItem(content, type, id) {
+            const div = document.createElement('div');
+            div.className = `item ${type}`;
+            div.textContent = content;
+            if(id) div.id = id;
+            return div;
+        }
+
+        // --- ALGORITHM LOGIC ---
+        function generateSteps(prefix) {
+            const actions = [];
+            // Mô phỏng stack logic để ghi lại các bước
+            let simStack = []; 
+
+            // Duyệt từ PHẢI sang TRÁI (i giảm dần)
+            for (let i = prefix.length - 1; i >= 0; i--) {
+                let char = prefix[i];
+                actions.push({ type: 'HIGHLIGHT', index: i, char: char });
+
+                if (isOperator(char)) {
+                    // Logic: Gặp toán tử -> Pop 2 toán hạng
+                    // Quan trọng: Vì duyệt ngược, phần tử Pop đầu tiên là Op1 (Trái), phần tử thứ 2 là Op2 (Phải)
+                    if (simStack.length < 2) {
+                        return [{ type: 'ERROR', msg: 'Biểu thức không hợp lệ (Thiếu toán hạng)!' }];
+                    }
+                    
+                    let op1 = simStack.pop(); // Top stack
+                    let op2 = simStack.pop(); // Next top
+                    
+                    let newExp = `(${op1}${char}${op2})`;
+                    simStack.push(newExp);
+
+                    actions.push({ 
+                        type: 'PROCESS_OP', 
+                        operator: char, 
+                        op1: op1, 
+                        op2: op2, 
+                        result: newExp,
+                        msg: `Gặp toán tử '${char}'. Pop '${op1}' và '${op2}'. Tạo chuỗi: ${newExp}`
+                    });
+
+                } else {
+                    // Logic: Gặp toán hạng -> Push vào Stack
+                    simStack.push(char);
+                    actions.push({ 
+                        type: 'PUSH', 
+                        value: char, 
+                        msg: `Gặp toán hạng '${char}'. Push vào Stack.` 
+                    });
+                }
+            }
+
+            if (simStack.length === 1) {
+                actions.push({ type: 'FINISH', result: simStack.pop() });
+            } else {
+                actions.push({ type: 'ERROR', msg: 'Biểu thức thừa toán hạng hoặc sai định dạng!' });
+            }
+
+            return actions;
+        }
+
+        // --- UI CONTROL ---
+
+        function init() {
+            let val = elInput.value.replace(/\s+/g, '');
+            if(!val) return alert("Vui lòng nhập biểu thức!");
+
+            elSource.innerHTML = '';
+            elStack.innerHTML = '';
+            elFinal.style.display = 'none';
+            elLog.innerHTML = '';
+            currentStepIndex = 0;
+
+            // Render chuỗi nguồn lên giao diện
+            for(let i = 0; i < val.length; i++) {
+                elSource.appendChild(createItem(val[i], isOperator(val[i]) ? 'operator' : 'operand', `src-${i}`));
+            }
+
+            steps = generateSteps(val);
+            if(steps[0] && steps[0].type === 'ERROR') {
+                alert(steps[0].msg);
+                return;
+            }
+
+            btnStart.style.display = 'none';
+            btnStep.style.display = 'inline-block';
+            btnReset.style.display = 'inline-block';
+            elInput.disabled = true;
+            
+            log(`Bắt đầu duyệt chuỗi độ dài ${val.length} từ phải sang trái...`);
+        }
+
+        function nextStep() {
+            if (currentStepIndex >= steps.length) return;
+
+            const action = steps[currentStepIndex];
+
+            // Xóa highlight cũ
+            document.querySelectorAll('.highlight').forEach(e => e.classList.remove('highlight'));
+
+            switch(action.type) {
+                case 'HIGHLIGHT':
+                    let el = document.getElementById(`src-${action.index}`);
+                    if(el) {
+                        el.classList.add('highlight');
+                        // Scroll vào tầm nhìn nếu chuỗi dài
+                        el.scrollIntoView({ behavior: 'smooth', block: 'center', inline: 'center' });
+                    }
+                    break;
+
+                case 'PUSH':
+                    log(action.msg);
+                    let item = createItem(action.value, 'operand');
+                    elStack.appendChild(item); // Append vào cuối (vì flex-direction: column-reverse hiển thị đúng tính chất stack)
+                    
+                    // Mark processed
+                    document.querySelector('.highlight').classList.add('processed');
+                    break;
+
+                case 'PROCESS_OP':
+                    log(action.msg);
+                    // Visual effect: Remove 2 items from Stack UI
+                    // Vì stack UI là column-reverse, phần tử mới nhất nằm ở cuối mảng children
+                    let domStack = elStack.children;
+                    if(domStack.length >= 2) {
+                        domStack[domStack.length - 1].remove(); // Pop Op1
+                        domStack[domStack.length - 1].remove(); // Pop Op2
+                    }
+
+                    // Push new complex item
+                    let complexItem = createItem(action.result, 'complex');
+                    elStack.appendChild(complexItem);
+
+                    document.querySelector('.highlight').classList.add('processed');
+                    break;
+
+                case 'FINISH':
+                    log("HOÀN THÀNH! Kết quả cuối cùng là duy nhất trong Stack.");
+                    elFinal.textContent = `KẾT QUẢ TRUNG TỐ: ${action.result}`;
+                    elFinal.style.display = 'block';
+                    btnStep.disabled = true;
+                    // Highlight kết quả trong stack
+                    if(elStack.lastElementChild) elStack.lastElementChild.classList.add('highlight');
+                    break;
+                    
+                case 'ERROR':
+                    log(`LỖI: ${action.msg}`);
+                    alert(action.msg);
+                    break;
+            }
+
+            currentStepIndex++;
+        }
+
+        function reset() {
+            location.reload();
+        }
+    </script>
+</body>
+</html>

@@ -1,0 +1,317 @@
+<!DOCTYPE html>
+<html lang="vi">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Tài liệu Boolean Algebra - ACSL</title>
+    <link
+        href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;800&family=JetBrains+Mono:wght@400;700&display=swap"
+        rel="stylesheet">
+    <script>window.MathJax = { tex: { inlineMath: [['$', '$']] } };</script>
+    <script async src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-mml-chtml.js"></script>
+    <style>
+        :root {
+            --bg: #0f172a;
+            --card: rgba(30, 41, 59, 0.9);
+            --accent: #f59e0b;
+            --text: #f1f5f9;
+            --dim: #94a3b8;
+        }
+
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Inter', sans-serif;
+            background: var(--bg);
+            color: var(--text);
+            padding: 30px 15px;
+            line-height: 1.7;
+        }
+
+        .container {
+            max-width: 900px;
+            margin: 0 auto;
+        }
+
+        header {
+            text-align: center;
+            margin-bottom: 40px;
+            border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+            padding-bottom: 20px;
+        }
+
+        h1 {
+            font-size: 2rem;
+            background: linear-gradient(to right, #f59e0b, #ef4444);
+            -webkit-background-clip: text;
+            background-clip: text;
+            -webkit-text-fill-color: transparent;
+        }
+
+        h2 {
+            color: var(--accent);
+            margin: 30px 0 15px;
+            font-size: 1.3rem;
+        }
+
+        h3 {
+            color: #60a5fa;
+            margin: 20px 0 10px;
+            font-size: 1.1rem;
+        }
+
+        .card {
+            background: var(--card);
+            border-radius: 16px;
+            padding: 25px;
+            margin-bottom: 20px;
+        }
+
+        code {
+            font-family: 'JetBrains Mono', monospace;
+            background: rgba(0, 0, 0, 0.5);
+            padding: 2px 8px;
+            border-radius: 4px;
+        }
+
+        .code-block {
+            background: #000;
+            padding: 15px;
+            border-radius: 10px;
+            margin: 15px 0;
+            font-family: 'JetBrains Mono';
+            border-left: 4px solid var(--accent);
+        }
+
+        .table {
+            width: 100%;
+            border-collapse: collapse;
+            margin: 15px 0;
+        }
+
+        .table th,
+        .table td {
+            padding: 12px;
+            text-align: center;
+            border: 1px solid rgba(255, 255, 255, 0.1);
+        }
+
+        .table th {
+            background: rgba(245, 158, 11, 0.2);
+            color: var(--accent);
+        }
+
+        .tip {
+            background: rgba(59, 130, 246, 0.1);
+            padding: 15px;
+            border-radius: 10px;
+            border-left: 4px solid #3b82f6;
+            margin: 15px 0;
+        }
+
+        .nav {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 10px;
+            margin-bottom: 30px;
+        }
+
+        .nav a {
+            padding: 8px 16px;
+            background: rgba(255, 255, 255, 0.05);
+            border-radius: 8px;
+            color: var(--text);
+            text-decoration: none;
+            font-size: 0.9rem;
+        }
+
+        .nav a:hover {
+            background: var(--accent);
+            color: #000;
+        }
+
+        .example {
+            background: rgba(245, 158, 11, 0.1);
+            padding: 15px;
+            border-radius: 10px;
+            margin: 10px 0;
+        }
+    </style>
+</head>
+
+<body>
+    <div class="container">
+        <header>
+            <h1>📘 Tài liệu Boolean Algebra - ACSL</h1>
+            <p style="color: var(--dim);">Đại số Boolean - Nền tảng cho mạch logic và lập trình</p>
+        </header>
+
+        <nav class="nav">
+            <a href="#intro">Giới thiệu</a>
+            <a href="#operators">Toán tử</a>
+            <a href="#precedence">Thứ tự ưu tiên</a>
+            <a href="#laws">Các đẳng thức</a>
+            <a href="#demorgan">De Morgan</a>
+            <a href="#examples">Ví dụ</a>
+        </nav>
+
+        <section id="intro" class="card">
+            <h2>⚡ Giới thiệu</h2>
+            <p>Boolean Algebra là nhánh đại số trong đó các biến chỉ có 2 giá trị: <strong>true (1)</strong> và
+                <strong>false (0)</strong>.</p>
+            <div class="tip">
+                <strong>💡 Ứng dụng:</strong>
+                <ul style="margin-top: 10px; padding-left: 20px;">
+                    <li><strong>Lập trình:</strong> Điều kiện if/else, vòng lặp while</li>
+                    <li><strong>Phần cứng:</strong> Thiết kế mạch logic, cổng AND/OR/NOT</li>
+                    <li><strong>Tìm kiếm:</strong> Google: "jaguar speed -car"</li>
+                </ul>
+            </div>
+        </section>
+
+        <section id="operators" class="card">
+            <h2>🔧 Các toán tử cơ bản</h2>
+            <table class="table">
+                <tr>
+                    <th>Toán tử</th>
+                    <th>Ký hiệu</th>
+                    <th>Mô tả</th>
+                    <th>Công thức</th>
+                </tr>
+                <tr>
+                    <td>AND</td>
+                    <td>$x \cdot y$ hoặc $xy$</td>
+                    <td>True khi cả hai đều true</td>
+                    <td>1·1=1, còn lại = 0</td>
+                </tr>
+                <tr>
+                    <td>OR</td>
+                    <td>$x + y$</td>
+                    <td>True khi ít nhất một true</td>
+                    <td>0+0=0, còn lại = 1</td>
+                </tr>
+                <tr>
+                    <td>NOT</td>
+                    <td>$\overline{x}$ hoặc $\neg x$</td>
+                    <td>Đảo ngược giá trị</td>
+                    <td>$\overline{1}$=0, $\overline{0}$=1</td>
+                </tr>
+                <tr>
+                    <td>XOR</td>
+                    <td>$x \oplus y$</td>
+                    <td>True khi hai giá trị khác nhau</td>
+                    <td>$x\overline{y} + \overline{x}y$</td>
+                </tr>
+                <tr>
+                    <td>XNOR</td>
+                    <td>$x \odot y$</td>
+                    <td>True khi hai giá trị giống nhau</td>
+                    <td>$xy + \overline{x}\overline{y}$</td>
+                </tr>
+            </table>
+        </section>
+
+        <section id="precedence" class="card">
+            <h2>📊 Thứ tự ưu tiên</h2>
+            <p>Từ cao đến thấp:</p>
+            <div class="code-block">
+                1. NOT (cao nhất)<br>
+                2. AND<br>
+                3. XOR, XNOR<br>
+                4. OR (thấp nhất)
+            </div>
+            <div class="tip">
+                <strong>💡 Ví dụ:</strong> $A + B \cdot C$ được tính như $A + (B \cdot C)$ vì AND ưu tiên hơn OR.
+            </div>
+        </section>
+
+        <section id="laws" class="card">
+            <h2>📐 Các đẳng thức quan trọng</h2>
+            <h3>Đẳng thức hấp thụ (Absorption)</h3>
+            <table class="table">
+                <tr>
+                    <th>Công thức</th>
+                    <th>Giải thích</th>
+                </tr>
+                <tr>
+                    <td>$x + xy = x$</td>
+                    <td>x hấp thụ xy</td>
+                </tr>
+                <tr>
+                    <td>$x(x + y) = x$</td>
+                    <td>x hấp thụ (x+y)</td>
+                </tr>
+                <tr>
+                    <td>$x + \overline{x}y = x + y$</td>
+                    <td>Loại bỏ x̄</td>
+                </tr>
+            </table>
+
+            <h3>Đẳng thức phân phối (Distributive)</h3>
+            <table class="table">
+                <tr>
+                    <td>$x(y + z) = xy + xz$</td>
+                </tr>
+                <tr>
+                    <td>$(x+y)(p+q) = xp + xq + yp + yq$</td>
+                </tr>
+                <tr>
+                    <td>$(x+y)(x+z) = x + yz$</td>
+                </tr>
+            </table>
+        </section>
+
+        <section id="demorgan" class="card">
+            <h2>🔄 Định lý De Morgan</h2>
+            <div class="code-block">
+                $\overline{A \cdot B} = \overline{A} + \overline{B}$ (NOT of AND = OR of NOTs)<br><br>
+                $\overline{A + B} = \overline{A} \cdot \overline{B}$ (NOT of OR = AND of NOTs)
+            </div>
+            <div class="tip">
+                <strong>💡 Mẹo nhớ:</strong> "Phá ngoặc thì đổi dấu AND ↔ OR và thêm NOT cho từng biến"
+            </div>
+        </section>
+
+        <section id="examples" class="card">
+            <h2>📚 Ví dụ từ đề thi ACSL</h2>
+            <div class="example">
+                <h3>Bài 1: Rút gọn biểu thức</h3>
+                <div class="code-block">$\overline{\overline{A(A+B)} + B\overline{A}}$</div>
+                <p><strong>Giải:</strong></p>
+                <ul style="padding-left: 20px;">
+                    <li>Bước 1: $\overline{A(A+B)} = \overline{A} + \overline{(A+B)} = \overline{A} +
+                        \overline{A}\overline{B}$ (De Morgan)</li>
+                    <li>Bước 2: $= \overline{A}$ (Hấp thụ)</li>
+                    <li>Bước 3: $\overline{\overline{A} + B\overline{A}} = \overline{\overline{A}(1+B)} =
+                        \overline{\overline{A}} = A$</li>
+                </ul>
+                <p><strong>Kết quả: A</strong></p>
+            </div>
+
+            <div class="example">
+                <h3>Bài 2: Tìm nghiệm</h3>
+                <div class="code-block">$\overline{\overline{(A+B)} + \overline{A}B}$</div>
+                <p>Tìm các cặp (A,B) làm biểu thức TRUE.</p>
+                <p><strong>Cách 1: Rút gọn</strong></p>
+                <ul style="padding-left: 20px;">
+                    <li>$\overline{(A+B)} = \overline{A}\overline{B}$ (De Morgan)</li>
+                    <li>$\overline{\overline{A}\overline{B} + \overline{A}B} = \overline{\overline{A}(\overline{B}+B)} =
+                        \overline{\overline{A}} = A$</li>
+                </ul>
+                <p><strong>Nghiệm:</strong> Tất cả (A,B) có A=1: <strong>(1,0)</strong> và <strong>(1,1)</strong></p>
+            </div>
+        </section>
+
+        <footer style="text-align: center; margin-top: 40px; color: var(--dim); font-size: 0.9rem;">
+            <p>Nguồn: <a href="http://www.categories.acsl.org/wiki/index.php?title=Boolean_Algebra"
+                    style="color: var(--accent);">ACSL - Boolean Algebra</a></p>
+        </footer>
+    </div>
+</body>
+
+</html>
