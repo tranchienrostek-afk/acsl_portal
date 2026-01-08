@@ -1,0 +1,23 @@
+databases:
+  - name: acsl-db
+    databaseName: acsl_portal
+    user: acsl_user
+    plan: free
+
+services:
+  - type: web
+    name: acsl-portal
+    env: python
+    buildCommand: "./build.sh"
+    startCommand: "gunicorn acsl_portal.wsgi:application"
+    envVars:
+      - key: PYTHON_VERSION
+        value: 3.11.0
+      - key: DATABASE_URL
+        fromDatabase:
+          name: acsl-db
+          property: connectionString
+      - key: SECRET_KEY
+        generateValue: true
+      - key: WEB_CONCURRENCY
+        value: 4

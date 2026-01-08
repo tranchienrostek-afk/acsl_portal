@@ -1,4 +1,7 @@
-from django.shortcuts import render
+from django.shortcuts import render, redirect
+from django.contrib.auth.forms import UserCreationForm
+from django.contrib import messages
+from django.contrib.auth.decorators import login_required
 from django.http import FileResponse, Http404
 from django.conf import settings
 import os
@@ -22,8 +25,21 @@ def index(request):
     """Main portal page showing all ACSL topics."""
     return render(request, 'index.html', {'topics': TOPICS})
 
+def register(request):
+    """Register a new student."""
+    if request.method == 'POST':
+        form = UserCreationForm(request.POST)
+        if form.is_valid():
+            form.save()
+            messages.success(request, 'Tài khoản đã được tạo! Vui lòng đăng nhập.')
+            return redirect('login')
+    else:
+        form = UserCreationForm()
+    return render(request, 'register.html', {'form': form})
+
+@login_required
 def topic_detail(request, folder):
-    """List files in a topic folder."""
+    """List files in a topic folder (Require login)."""
     # Find topic info
     topic = next((t for t in TOPICS if t['folder'] == folder), None)
     if not topic:
@@ -35,18 +51,20 @@ def topic_detail(request, folder):
         raise Http404("Folder not found")
     
     files = []
-    for f in sorted(folder_path.iterdir()):
-        if f.is_file() and not f.name.startswith('.'):
-            files.append({
-                'name': f.name,
-                'ext': f.suffix.lower(),
-                'url': f'/topic/{folder}/file/{f.name}'
-            })
+    if folder_path.exists():
+        for f in sorted(folder_path.iterdir()):
+            if f.is_file() and not f.name.startswith('.'):
+                files.append({
+                    'name': f.name,
+                    'ext': f.suffix.lower(),
+                    'url': f'/topic/{folder}/file/{f.name}'
+                })
     
     return render(request, 'topic_detail.html', {'topic': topic, 'files': files})
 
+@login_required
 def serve_topic_file(request, folder, filename):
-    """Serve a file from a topic folder."""
+    """Serve a file from a topic folder (Require login)."""
     file_path = settings.TOPICS_DIR / folder / filename
     if not file_path.exists() or not file_path.is_file():
         raise Http404("File not found")
@@ -66,4 +84,3 @@ def serve_topic_file(request, folder, filename):
     content_type = content_types.get(ext, 'application/octet-stream')
     
     return FileResponse(open(file_path, 'rb'), content_type=content_type)
-

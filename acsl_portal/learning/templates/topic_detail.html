@@ -1,117 +1,33 @@
-<!DOCTYPE html>
+﻿<!DOCTYPE html>
 <html lang="vi">
-
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>{{ topic.title }} - ACSL Learning Portal</title>
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;800&display=swap" rel="stylesheet">
     <style>
-        :root {
-            --bg: #0a0a0f;
-            --card: rgba(20, 25, 35, 0.95);
-            --accent: #3b82f6;
-            --text: #f1f5f9;
-            --dim: #94a3b8;
-        }
-
-        * {
-            margin: 0;
-            padding: 0;
-            box-sizing: border-box;
-        }
-
-        body {
-            font-family: 'Inter', sans-serif;
-            background: var(--bg);
-            color: var(--text);
-            min-height: 100vh;
-            padding: 30px 20px;
-        }
-
-        .container {
-            max-width: 900px;
-            margin: 0 auto;
-        }
-
-        .back {
-            color: var(--accent);
-            text-decoration: none;
-            display: inline-flex;
-            align-items: center;
-            gap: 8px;
-            margin-bottom: 20px;
-        }
-
-        .back:hover {
-            text-decoration: underline;
-        }
-
-        header {
-            margin-bottom: 30px;
-        }
-
-        h1 {
-            font-size: 2rem;
-            display: flex;
-            align-items: center;
-            gap: 15px;
-        }
-
-        .icon {
-            font-size: 2.5rem;
-        }
-
-        .num {
-            background: linear-gradient(135deg, #3b82f6, #8b5cf6);
-            padding: 5px 15px;
-            border-radius: 20px;
-            font-size: 0.9rem;
-        }
-
-        .files-grid {
-            display: grid;
-            gap: 15px;
-        }
-
-        .file-card {
-            background: var(--card);
-            border: 1px solid rgba(255, 255, 255, 0.05);
-            border-radius: 12px;
-            padding: 20px;
-            display: flex;
-            align-items: center;
-            gap: 15px;
-            text-decoration: none;
-            color: var(--text);
-            transition: all 0.3s;
-        }
-
-        .file-card:hover {
-            transform: translateX(10px);
-            border-color: var(--accent);
-        }
-
-        .file-icon {
-            font-size: 2rem;
-        }
-
-        .file-name {
-            font-weight: 600;
-        }
-
-        .file-ext {
-            color: var(--dim);
-            font-size: 0.85rem;
-            text-transform: uppercase;
-        }
+        :root { --bg: #0a0a0f; --card: rgba(20,25,35,0.95); --accent: #3b82f6; --text: #f1f5f9; --dim: #94a3b8; }
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        body { font-family: 'Inter', sans-serif; background: var(--bg); color: var(--text); min-height: 100vh; padding: 30px 20px; }
+        .container { max-width: 900px; margin: 0 auto; }
+        .back { color: var(--accent); text-decoration: none; display: inline-flex; align-items: center; gap: 8px; margin-bottom: 20px; }
+        .back:hover { text-decoration: underline; }
+        header { margin-bottom: 30px; }
+        h1 { font-size: 2rem; display: flex; align-items: center; gap: 15px; }
+        .icon { font-size: 2.5rem; }
+        .num { background: linear-gradient(135deg, #3b82f6, #8b5cf6); padding: 5px 15px; border-radius: 20px; font-size: 0.9rem; }
+        .files-grid { display: grid; gap: 15px; }
+        .file-card { background: var(--card); border: 1px solid rgba(255,255,255,0.05); border-radius: 12px; padding: 20px; display: flex; align-items: center; gap: 15px; text-decoration: none; color: var(--text); transition: all 0.3s; }
+        .file-card:hover { transform: translateX(10px); border-color: var(--accent); }
+        .file-icon { font-size: 2rem; }
+        .file-name { font-weight: 600; }
+        .file-ext { color: var(--dim); font-size: 0.85rem; text-transform: uppercase; }
     </style>
 </head>
-
 <body>
     <div class="container">
-        <a href="/" class="back">← Quay lại trang chủ</a>
-
+        <a href="/" class="back"> Quay lại trang chủ</a>
+        
         <header>
             <h1>
                 <span class="icon">{{ topic.icon }}</span>
@@ -122,12 +38,9 @@
 
         <div class="files-grid">
             {% for file in files %}
-            <a href="{{ file.url }}" class="file-card" {% if file.ext=='.html' %}target="_blank" {% endif %}>
+            <a href="{{ file.url }}" class="file-card" {% if file.ext == '.html' %}target="_blank"{% endif %}>
                 <span class="file-icon">
-                    {% if file.ext == '.html' %}🌐
-                    {% elif file.ext == '.pdf' %}📄
-                    {% elif file.ext == '.py' %}🐍
-                    {% else %}📁{% endif %}
+                    {% if file.ext == '.html' %}{% elif file.ext == '.pdf' %}{% elif file.ext == '.py' %}{% else %}{% endif %}
                 </span>
                 <div>
                     <div class="file-name">{{ file.name }}</div>
@@ -140,5 +53,4 @@
         </div>
     </div>
 </body>
-
 </html>

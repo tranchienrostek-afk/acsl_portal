@@ -167,9 +167,25 @@
 
 <body>
     <div class="hero">
+        <div style="position: absolute; top: 20px; right: 20px;">
+            {% if user.is_authenticated %}
+            <span style="color: #94a3b8; margin-right: 15px;">Xin chào, <b>{{ user.username }}</b></span>
+            <form action="{% url 'logout' %}" method="post" style="display: inline;">
+                {% csrf_token %}
+                <button type="submit"
+                    style="background: transparent; border: 1px solid #3b82f6; color: #3b82f6; padding: 5px 15px; border-radius: 20px; cursor: pointer;">Đăng
+                    xuất</button>
+            </form>
+            {% else %}
+            <a href="{% url 'login' %}"
+                style="background: #3b82f6; color: white; padding: 8px 20px; border-radius: 20px; text-decoration: none; font-weight: 600;">Đăng
+                nhập</a>
+            {% endif %}
+        </div>
         <h1>🎓 ACSL Learning Portal</h1>
         <p class="subtitle">Cổng học tập ACSL Việt Nam - Tổng hợp tài liệu, bài tập và mô phỏng cho kỳ thi American
             Computer Science League</p>
+
         <div class="stats">
             <div class="stat">
                 <div class="stat-num">12</div>
